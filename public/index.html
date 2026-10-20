@@ -792,10 +792,14 @@ function resumoSheet(weekIso){
   return s;
 }
 function buildBook(rows,weekIso){
+  // Datas civis são números inteiros no Excel; não passam por conversão de fuso da biblioteca.
+  const excelDay=value=>{const [y,m,d]=String(value).split('-').map(Number);return (Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000;};
+  const excelMoment=value=>{const d=new Date(value);return (Date.UTC(d.getFullYear(),d.getMonth(),d.getDate(),d.getHours(),d.getMinutes(),d.getSeconds())-Date.UTC(1899,11,30))/86400000;};
+  function formatDates(sheet){for(const [key,cell] of Object.entries(sheet)){if(key[0]==='!'||cell.t!=='n')continue;const column=XLSX.utils.decode_cell(key).c,header=sheet[XLSX.utils.encode_cell({r:0,c:column})]?.v;if(['Data','Data do RDO','Data do apontamento','Semana (segunda)','Até (domingo)'].includes(header))cell.z='dd/mm/yyyy';if(['Enviado em','Data do envio'].includes(header))cell.z='dd/mm/yyyy hh:mm';}}
   rows=[...rows].sort((a,b)=>a.data.localeCompare(b.data)||ordem(a)-ordem(b)||(a.turno||'1').localeCompare(b.turno||'1'));
   const z=v=>v||'';
   const rdo=rows.map(r=>{const e=r.efetivo||{},h=r.horaExtra||{},f1=h.faixa1||{},f2=h.faixa2||{},fd=h.fimDeSemana;return{
-    'Data':parseIso(r.data),'Dia':DIAS[parseIso(r.data).getDay()],'Local':r.local||'','Responsável':r.supervisor,'Conta (e-mail)':RDO.user().email,'Frente':r.frente,
+    'Data':excelDay(r.data),'Dia':DIAS[parseIso(r.data).getDay()],'Local':r.local||'','Responsável':r.supervisor,'Conta (e-mail)':RDO.user().email,'Frente':r.frente,
     'Turno':r.turno==='2'?'2º turno':'1º turno',
     'Jornada':jornadaTexto(jornada(r.data,r.turno||'1')),
     'Efetivo Mecânica':e.mecanica||0,'Efetivo Tubulação':e.tubulacao||0,'Efetivo Solda':e.solda||0,'Efetivo Total':sum(e),
@@ -804,26 +808,24 @@ function buildBook(rows,weekIso){
     'Extra fim de semana':fd?sum(fd):'',
     'Total func. na extra':sumHE(r),
     'Atividades':(r.atividades||[]).map(a=>(a.lote?'Lote '+a.lote+': ':'')+a.descricao).join(' | '),
-    'Observações':r.observacoes||'','Enviado em':r.criadoEm?new Date(r.criadoEm):'','ID':r.id}});
+    'Observações':r.observacoes||'','Enviado em':r.criadoEm?excelMoment(r.criadoEm):'','ID':r.id}});
   const acts=[];rows.forEach(r=>(r.atividades||[]).forEach(a=>{const source=a.snapshot||{};acts.push({
-    'Data do RDO':parseIso(r.data),'Local / equipe':r.local||'','Responsável':r.supervisor,'Conta (e-mail)':r.autor_email||RDO.user().email,'Turno':r.turno==='2'?'2º':'1º',
+    'Data do RDO':excelDay(r.data),'Local / equipe':r.local||'','Responsável':r.supervisor,'Conta (e-mail)':r.autor_email||RDO.user().email,'Turno':r.turno==='2'?'2º':'1º',
     'Serviço':source['SERVIÇO']||'','Lote':/^\d+$/.test(a.lote)?Number(a.lote):a.lote,'Isométrico':source['ISOMÉTRICO']||'','Spool':source.SPOOL||'','ID Spool':a.spoolId||'',
-    'Data do apontamento':a.data?parseIso(a.data):'','Observação do apontamento':a.observacao||'','Descrição':a.descricao||'','ID RDO':r.id});}));
+    'Data do apontamento':a.data?excelDay(a.data):'','Observação do apontamento':a.observacao||'','Descrição':a.descricao||'','ID RDO':r.id});}));
   const wb=XLSX.utils.book_new();
   if(weekIso)XLSX.utils.book_append_sheet(wb,resumoSheet(weekIso),'Resumo');
   const s1=XLSX.utils.json_to_sheet(rdo,{cellDates:true,dateNF:'dd/mm/yyyy'});
   s1['!cols']=[{wch:11},{wch:9},{wch:24},{wch:30},{wch:11},{wch:9},{wch:50},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:12},{wch:10},{wch:60},{wch:40},{wch:17},{wch:22}];
   const s2=XLSX.utils.json_to_sheet(acts,{cellDates:true,dateNF:'dd/mm/yyyy'});
   s2['!cols']=[{wch:13},{wch:24},{wch:30},{wch:30},{wch:9},{wch:16},{wch:9},{wch:44},{wch:14},{wch:16},{wch:21},{wch:44},{wch:55},{wch:38}];
-  [s1,s2].forEach(s=>{for(const k in s){if(k[0]!=='!'&&s[k].t==='d'){
-    const c=XLSX.utils.decode_cell(k).c;const h=s[XLSX.utils.encode_cell({r:0,c})];
-    s[k].z=(h&&h.v==='Enviado em')?'dd/mm/yyyy hh:mm':'dd/mm/yyyy'}}});
+  [s1,s2].forEach(formatDates);
   XLSX.utils.book_append_sheet(wb,s1,'RDO');XLSX.utils.book_append_sheet(wb,s2,'Atividades do dia');
   const ws=[...new Set(rows.map(r=>iso(mondayOf(parseIso(r.data)))))].sort().map(w=>{const s=semanas[w];return{
-    'Semana (segunda)':parseIso(w),'Até (domingo)':addDays(parseIso(w),6),
-    'Enviado à obra':s&&s.enviadoObraEm?'Sim':'Não','Data do envio':s&&s.enviadoObraEm?new Date(s.enviadoObraEm):''}});
+    'Semana (segunda)':excelDay(w),'Até (domingo)':excelDay(iso(addDays(parseIso(w),6))),
+    'Enviado à obra':s&&s.enviadoObraEm?'Sim':'Não','Data do envio':s&&s.enviadoObraEm?excelMoment(s.enviadoObraEm):''}});
   const s3=XLSX.utils.json_to_sheet(ws,{cellDates:true});
-  for(const k in s3){if(k[0]!=='!'&&s3[k].t==='d')s3[k].z=k.startsWith('D')?'dd/mm/yyyy hh:mm':'dd/mm/yyyy'}
+  formatDates(s3);
   s3['!cols']=[{wch:16},{wch:14},{wch:15},{wch:18}];
   XLSX.utils.book_append_sheet(wb,s3,'Envio à obra');
   return XLSX.write(wb,{type:'array',bookType:'xlsx'});
