@@ -555,7 +555,7 @@ function readForm(){
 function setTrio(p,o){o=o||{};$('#'+p+'-mec').value=o.mecanica||'';$('#'+p+'-tub').value=o.tubulacao||'';$('#'+p+'-sol').value=o.solda||''}
 function currentCountsContext(){return [$('#f-local').value,$('#f-data').value,$('#f-turno').value].join('|')}
 function setActivitiesForm(r,viewOnly=false){
-  const legacy=(r.atividades||[]).filter(a=>!a.spoolId);$('#acts').innerHTML='';legacy.forEach(addAct);$('#legacy-activities').hidden=!legacy.length;$('#legacy-activities').textContent=legacy.length?'Atividades anteriores preservadas: '+legacy.map(a=>(a.lote?'Lote '+a.lote+' — ':'')+(a.descricao||'')).join(' | '):'';
+  const legacy=(r.atividades||[]).filter(a=>!a.spoolId);$('#acts').innerHTML='';legacy.forEach(addAct);$('#legacy-activities').hidden=true;$('#legacy-activities').textContent='';
   window.RDOActivityRecord={...r,viewOnly};window.RDOApontamento?.setRecord(r,viewOnly);
 }
 function restoreActivities(force=false){
