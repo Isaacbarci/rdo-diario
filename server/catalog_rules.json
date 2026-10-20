@@ -1,0 +1,287 @@
+{
+  "spool": {
+    "headers": [
+      "SERVIÇO",
+      "ISOMÉTRICO",
+      "SPOOL",
+      "ÁREA",
+      "REV",
+      "MATERIAL",
+      "PROG FAB",
+      "EXECUTANTE FAB",
+      "PESO",
+      "ÁREA SUPERF.",
+      "LINHA",
+      "COND PINT",
+      "DIÂM. NOMINAL",
+      "DATA DO ROMANEIO",
+      "OBS ROMANEIO",
+      "COR",
+      "ID_SPOOL",
+      "QR",
+      "ROMANEIOS",
+      "STATUS"
+      ,"CORTE/BISEL"
+    ]
+  },
+  "suporte": {
+    "headers": [
+      "Serviço",
+      "Posição / TAG",
+      "Identificação 1",
+      "Identificação 2",
+      "REV",
+      "Prog. Fab.",
+      "Desenho Suporte",
+      "Informações",
+      "Tipo de Suporte",
+      "Tipo Estrutura",
+      "Linha",
+      "Qtde",
+      "Qtde Enviada",
+      "Saldo",
+      "Peso (Kg)",
+      "Área Superfície",
+      "Número Romaneio",
+      "Data Romaneio",
+      "Localização",
+      "Status",
+      "Observação",
+      "DATA DO ROMANEIO",
+      "QTD ENVIADA",
+      "OBS ROMANEIO",
+      "PESO ENVIADO",
+      "ÁREA ENVIADA",
+      "PESO Unitário",
+      "PESO TOTAL",
+      "AREA M² Unitário",
+      "ÁREA M² TOTAL",
+      "ID",
+      "QR"
+    ]
+  },
+  "materiais": {
+    "headers": [
+      "CLIENTE",
+      "CODIGO",
+      "DESCRICAO",
+      "UNID",
+      "DISCIPLINA",
+      "APLICACAO",
+      "SALDOGERAL",
+      "QTDE_ENG",
+      "QTDECADASTRADA",
+      "QTDEENTRADA",
+      "QTDEENTRADAFE",
+      "SAIDA",
+      "SAIDAFE",
+      "RESERVADO",
+      "LOCAL_ARMAZENAGEM",
+      "PESO_ENG",
+      "PESO_CAD",
+      "ID_CONTRATO",
+      "NUMERO_CONTRATO",
+      "ID",
+      "MATERIAL",
+      "PESO",
+      "M2",
+      "DN",
+      "Tabela1.DN mm",
+      "PESO TOTAL"
+    ],
+    "dnTable": [
+      [
+        "DN Pol",
+        "DN mm"
+      ],
+      [
+        "1/8\"",
+        "10"
+      ],
+      [
+        "1/4\"",
+        "14"
+      ],
+      [
+        "3/8\"",
+        "17"
+      ],
+      [
+        "1/2\"",
+        "21"
+      ],
+      [
+        "3/4\"",
+        "27"
+      ],
+      [
+        "1\"",
+        "33"
+      ],
+      [
+        "1.1/4\"",
+        "42"
+      ],
+      [
+        "1.1/2\"",
+        "48"
+      ],
+      [
+        "2\"",
+        "60"
+      ],
+      [
+        "2.1/2\"",
+        "73"
+      ],
+      [
+        "3\"",
+        "89"
+      ],
+      [
+        "3.1/2\"",
+        "102"
+      ],
+      [
+        "4\"",
+        "114"
+      ],
+      [
+        "5\"",
+        "141"
+      ],
+      [
+        "6\"",
+        "168"
+      ],
+      [
+        "8\"",
+        "219"
+      ],
+      [
+        "10\"",
+        "273"
+      ],
+      [
+        "12\"",
+        "324"
+      ],
+      [
+        "14\"",
+        "356"
+      ],
+      [
+        "16\"",
+        "406"
+      ],
+      [
+        "18\"",
+        "457"
+      ],
+      [
+        "20\"",
+        "508"
+      ],
+      [
+        "22\"",
+        "559"
+      ],
+      [
+        "24\"",
+        "610"
+      ],
+      [
+        "26\"",
+        "660"
+      ],
+      [
+        "28\"",
+        "711"
+      ],
+      [
+        "30\"",
+        "762"
+      ],
+      [
+        "32\"",
+        "813"
+      ],
+      [
+        "34\"",
+        "864"
+      ],
+      [
+        "36\"",
+        "914"
+      ],
+      [
+        "38\"",
+        "965"
+      ],
+      [
+        "40\"",
+        "1016"
+      ],
+      [
+        "42\"",
+        "1067"
+      ],
+      [
+        "44\"",
+        "1118"
+      ],
+      [
+        "46\"",
+        "1168"
+      ],
+      [
+        "48\"",
+        "1219"
+      ],
+      [
+        "50\"",
+        "1270"
+      ],
+      [
+        "52\"",
+        "1320"
+      ],
+      [
+        "54\"",
+        "1371"
+      ],
+      [
+        "56\"",
+        "1422"
+      ],
+      [
+        "60\"",
+        "1524"
+      ],
+      [
+        "64\"",
+        "1625"
+      ],
+      [
+        "68\"",
+        "1727"
+      ],
+      [
+        "72\"",
+        "1828"
+      ],
+      [
+        "78\"",
+        "1981"
+      ],
+      [
+        "84\"",
+        "2133"
+      ],
+      [
+        "90\"",
+        "2286"
+      ]
+    ]
+  }
+}
