@@ -97,7 +97,7 @@ textarea{resize:vertical;min-height:70px}
 .empty{color:var(--muted);text-align:center;padding:28px 8px;border:1px dashed var(--line);border-radius:10px}
 .lock{font-size:14px}
 @media (prefers-reduced-motion:no-preference){.tab,.btn{transition:background .15s,opacity .15s}}
-</style>
+</style><link rel="stylesheet" href="design.css">
 
 <div class="wrap">
   <header>
@@ -111,7 +111,6 @@ textarea{resize:vertical;min-height:70px}
   <div class="account"><span id="account-email"></span><a href="historico.html">Histórico e cópias</a><button type="button" id="logout" class="btn ghost">Sair</button></div><nav class="tabs" role="tablist">
     <button class="tab" id="tab-form" role="tab" aria-selected="true" aria-controls="p-form">Lançar RDO</button>
     <button class="tab" id="tab-list" role="tab" aria-selected="false" aria-controls="p-list">Registros</button>
-    <button class="tab" id="tab-apont" role="tab" aria-selected="false" aria-controls="p-apont">Apontamento</button>
     <button class="tab" id="tab-sum" role="tab" aria-selected="false" aria-controls="p-sum">Resumo</button>
   </nav>
 
@@ -119,7 +118,7 @@ textarea{resize:vertical;min-height:70px}
   <form id="p-form" class="panel" role="tabpanel" novalidate>
     <div id="editing" class="banner warn" hidden></div>
 
-    <section class="sec">
+    <section class="sec"><div class="sec-h"><h2>Dados do relatório</h2><p class="hint">Local, data e turno da equipe</p></div>
       <label>Local / equipe
         <select id="f-local">
           <optgroup label="Tubulação">
@@ -181,24 +180,22 @@ textarea{resize:vertical;min-height:70px}
       <p class="hint">Deixe em branco se ninguém ficou na extra.</p>
     </section>
 
-    <section class="sec">
-      <div class="sec-h"><h2>Atividades do dia</h2><p class="hint">Uma linha por lote ou serviço</p></div>
-      <div id="acts" class="acts"></div>
-      <div><button type="button" id="add-act" class="btn ghost">+ Adicionar atividade</button></div>
-      <label>Observações
-        <textarea id="f-obs" placeholder="Interferências, falta de material, liberação do CQ…"></textarea>
-      </label>
-    </section>
+    <section id="p-apont" class="sec activities-section"><div class="sec-h"><h2>Atividades do dia</h2><span id="ap-source" class="hint"></span></div>
+ <div class="stats" aria-label="Resumo dos spools filtrados"><div class="stat"><b id="ap-total">0</b><span>Spools</span></div><div class="stat"><b id="ap-done">0</b><span>Apontados</span></div><div class="stat"><b id="ap-pending">0</b><span>Pendentes</span></div></div><div class="ap-filters"><label>Serviço<select id="ap-service"><option value="">Todos</option></select></label><label>Lote<select id="ap-lot"><option value="">Todos</option></select></label>
+ <label>Filtrar por isométrico, ID<input id="ap-search" type="search" placeholder="Digite o isométrico ou ID"></label></div>
+ <p class="hint">Selecione os spools realizados pela equipe. A data acompanha o dia escolhido no RDO. Para retirar um item, desmarque a caixa e salve o RDO.</p><div class="row ap-toolbar"><span id="ap-selected-count" class="chip">0 neste RDO</span><label><span class="hint">Exibir</span><select id="ap-status"><option value="all">Todos os spools</option><option value="pending">Pendentes</option><option value="done">Apontados</option><option value="selected">Neste RDO</option></select></label></div>
+ <p id="ap-message" role="status" class="hint"></p><div class="table-scroll"><table id="ap-table"><thead><tr><th>Lote</th><th>Isométrico</th><th>Spool / ID</th><th>Data do apontamento</th><th>Selecionar</th></tr></thead><tbody></tbody></table></div>
+ <div class="row ap-pagination"><button id="ap-prev" type="button" class="btn ghost">Anterior</button><span id="ap-count"></span><button id="ap-next" type="button" class="btn ghost">Próxima</button></div><div hidden><div id="acts" class="acts"></div><button type="button" id="add-act">Adicionar atividade antiga</button></div><div id="legacy-activities" class="hint" hidden></div><label>Observações do RDO<textarea id="f-obs" placeholder="Interferências, falta de material, liberação do CQ…"></textarea></label></section>
 
     <div id="form-msg" class="banner" hidden></div>
-    <div class="row">
-      <button type="submit" id="save" class="btn grow">Salvar RDO</button><button type="submit" id="save-download" class="btn ghost">Salvar e baixar Excel</button>
+    <div class="row" id="form-actions">
+      <button type="submit" id="save" class="btn grow">Salvar RDO</button>
       <button type="button" id="cancel-edit" class="btn ghost" hidden>Cancelar edição</button>
     </div>
   </form>
 
   <!-- REGISTROS -->
-  <section id="p-list" class="panel" role="tabpanel" hidden>
+  <section id="p-list" class="panel" role="tabpanel" hidden><div class="sec-h"><h2>Registros da semana</h2><p class="hint">Acompanhe os lançamentos e gere suas cópias</p></div>
     <section class="sec">
       <div class="week">
         <button class="btn ghost" id="wk-prev" aria-label="Semana anterior">‹</button>
@@ -225,7 +222,7 @@ textarea{resize:vertical;min-height:70px}
   </section>
 
   <!-- RESUMO -->
-  <section id="p-sum" class="panel" role="tabpanel" hidden>
+  <section id="p-sum" class="panel" role="tabpanel" hidden><div class="sec-h"><h2>Resumo da operação</h2><p class="hint">Efetivo, atividades e evolução dos registros</p></div>
     <div id="sum-root"></div>
     <section class="sec">
       <div class="row">
@@ -238,14 +235,7 @@ textarea{resize:vertical;min-height:70px}
   </section>
 </div>
 
-<section id="p-apont" class="panel" role="tabpanel" hidden>
- <section class="sec"><div class="sec-h"><h2>Apontamento de spools</h2><span id="ap-source" class="hint"></span></div>
- <div class="grid2"><label>Serviço<select id="ap-service"><option value="">Todos</option></select></label><label>Lote<select id="ap-lot"><option value="">Todos</option></select></label></div>
- <label>Filtrar por isométrico, spool ou QR<input id="ap-search" type="search" placeholder="Digite para buscar"></label>
- <div class="row"><button id="ap-export" type="button" class="btn">Baixar apontamentos (.xlsx)</button><label class="row"><input id="ap-only" type="checkbox" style="width:auto">Somente apontados</label></div>
- <p id="ap-message" role="status" class="hint"></p><div class="table-scroll"><table id="ap-table"><thead><tr><th>Lote</th><th>Isométrico</th><th>Spool</th><th>Data do apontamento</th><th>Observação</th><th></th></tr></thead><tbody></tbody></table></div>
- <div class="row"><button id="ap-prev" type="button" class="btn ghost">Anterior</button><span id="ap-count"></span><button id="ap-next" type="button" class="btn ghost">Próxima</button></div></section></section>
- <dialog id="ap-dialog"><form id="ap-form"><h2>Apontamento</h2><p id="ap-item" class="hint"></p><label>Data do apontamento<input id="ap-date" type="date" required></label><label>Observação<textarea id="ap-notes" maxlength="4000"></textarea></label><p id="ap-error" role="status" class="hint"></p><div class="row"><button type="submit" class="btn" id="ap-save">Salvar apontamento</button><button type="button" class="btn ghost" id="ap-cancel">Cancelar</button></div></form></dialog>
+
 <script id="resumo-src">
 /* Resumo semanal — usado na aba Resumo e no dashboard baixado */
 var DASH_CSS = `
@@ -459,7 +449,7 @@ function applyRole(){
   if(!isOwner&&!$('#p-sum').hidden)show('form');
 }
 let records=[]; // {id,...data}
-let editingId=null;
+let editingId=null,countsContext='',countsDirty=false;
 let weekStart=mondayOf(new Date());
 
 /* ---------- datas ---------- */
@@ -473,14 +463,14 @@ function brShort(d){return pad(d.getDate())+'/'+pad(d.getMonth()+1)}
 
 /* ---------- tabs ---------- */
 function show(which){
-  [['form','#tab-form','#p-form'],['list','#tab-list','#p-list'],['sum','#tab-sum','#p-sum'],['apont','#tab-apont','#p-apont']].forEach(([k,t,p])=>{
+  [['form','#tab-form','#p-form'],['list','#tab-list','#p-list'],['sum','#tab-sum','#p-sum']].forEach(([k,t,p])=>{
     $(t).setAttribute('aria-selected',k===which);$(p).hidden=k!==which});
   try{localStorage.setItem('rdo-tab',which)}catch(e){}
 }
 $('#tab-form').onclick=()=>show('form');
 $('#tab-list').onclick=()=>show('list');
 $('#tab-sum').onclick=()=>show('sum');
-$('#tab-apont').onclick=()=>{show('apont');window.dispatchEvent(new Event('rdo-open-apont'));};
+
 
 /* ---------- resumo ---------- */
 const dashStyle=document.createElement('style');dashStyle.textContent=DASH_CSS;document.body.appendChild(dashStyle);
@@ -536,6 +526,7 @@ function applyJornada(){
 function n(id){const v=$('#'+id).value.trim();if(v==='')return 0;const x=Math.round(Number(v));return Number.isFinite(x)&&x>=0?x:NaN}
 function trio(p){return{mecanica:n(p+'-mec'),tubulacao:n(p+'-tub'),solda:n(p+'-sol')}}
 function readForm(){
+  const points=window.RDOApontamento?.read()||window.RDOActivityRecord?.apontamentos||[];
   const acts=[...$('#acts').children].map(r=>({
     lote:r.querySelector('.a-lote').value.trim(),
     descricao:r.querySelector('.a-desc').value.trim()
@@ -556,24 +547,46 @@ function readForm(){
     jornada:j,
     efetivo:ef,
     horaExtra,
-    atividades:acts,
+    apontamentos:points,
+    atividades:[...acts,...points.map(p=>({spoolId:p.spoolId,lote:String(p.snapshot?.['PROG FAB']??''),descricao:[p.snapshot?.['ISOMÉTRICO'],p.snapshot?.SPOOL].filter(Boolean).join(' · '),data:p.data,observacao:p.observacao||'',snapshot:p.snapshot}))],
     observacoes:$('#f-obs').value.trim()
   };
 }
 function setTrio(p,o){o=o||{};$('#'+p+'-mec').value=o.mecanica||'';$('#'+p+'-tub').value=o.tubulacao||'';$('#'+p+'-sol').value=o.solda||''}
+function currentCountsContext(){return [$('#f-local').value,$('#f-data').value,$('#f-turno').value].join('|')}
+function setActivitiesForm(r,viewOnly=false){
+  const legacy=(r.atividades||[]).filter(a=>!a.spoolId);$('#acts').innerHTML='';legacy.forEach(addAct);$('#legacy-activities').hidden=!legacy.length;$('#legacy-activities').textContent=legacy.length?'Atividades anteriores preservadas: '+legacy.map(a=>(a.lote?'Lote '+a.lote+' — ':'')+(a.descricao||'')).join(' | '):'';
+  window.RDOActivityRecord={...r,viewOnly};window.RDOApontamento?.setRecord(r,viewOnly);
+}
+function restoreActivities(force=false){
+  if(editingId||(!force&&(window.RDOApontamento?.read().length||window.RDOActivityRecord?.apontamentos?.length)))return;
+  const r=records.find(item=>item.localId===$('#f-local').value&&item.data===$('#f-data').value&&(item.turno||'1')===$('#f-turno').value);
+  setActivitiesForm(r||{},Boolean(r));
+  $('#f-obs').value=r?.observacoes||'';
+}
+function restoreCounts(force=false){
+  if(editingId||(!force&&countsDirty))return;
+  const context=currentCountsContext();if(!force&&context===countsContext)return;
+  const r=records.find(item=>item.localId===$('#f-local').value&&item.data===$('#f-data').value&&(item.turno||'1')===$('#f-turno').value);
+  const h=r?.horaExtra||{};setTrio('e',r?.efetivo);setTrio('h1',h.faixa1);setTrio('h2',h.faixa2);$('#he-ate').value=h.faixa1?.ate||'';
+  countsContext=r?context:'';countsDirty=false;
+}
 function fillForm(r){
   if(r.localId&&LOCAIS[r.localId])$('#f-local').value=r.localId;$('#f-data').value=r.data||iso(new Date());
   $('#f-turno').value=r.turno==='2'?'2':'1';
   const h=r.horaExtra||{};
   setTrio('e',r.efetivo);setTrio('h1',h.faixa1);setTrio('h2',h.faixa2);
   $('#he-ate').value=(r.turno==='2'&&h.faixa1&&h.faixa1.ate)||'';
-  $('#acts').innerHTML='';(r.atividades&&r.atividades.length?r.atividades:[{}]).forEach(addAct);
+  countsDirty=Object.values(r.efetivo||{}).some(value=>Number(value)>0)||Object.values(h).some(f=>['mecanica','tubulacao','solda'].some(k=>Number(f[k])>0));countsContext=countsDirty?currentCountsContext():'';
+  setActivitiesForm(r);
   $('#f-obs').value=r.observacoes||'';
   applyJornada();checkDup();
 }
 function resetForm(keepSup){
-  fillForm({localId:$('#f-local').value,turno:$('#f-turno').value,data:iso(new Date())});
+  const previous=keepSup?readForm():null;
+  fillForm({localId:$('#f-local').value,turno:$('#f-turno').value,data:previous?.data||$('#f-data').value||iso(new Date()),...(previous?{efetivo:previous.efetivo,horaExtra:previous.horaExtra}:{})});
   editingId=null;$('#editing').hidden=true;$('#cancel-edit').hidden=true;$('#save').textContent='Salvar RDO';
+  countsDirty=false;if(keepSup)countsContext=currentCountsContext();else restoreCounts(true);restoreActivities(true);checkDup();
 }
 function validate(r){
   if(!r.local)return 'Escolha o local / equipe.';
@@ -589,7 +602,8 @@ function validate(r){
       if(tot>r.efetivo[k])return `${nomes[k]}: ${tot} funcionário(s) na extra, mas o efetivo do dia é ${r.efetivo[k]}.`}
     if(r.jornada.tipo==='turno2'&&sum(f1)>0&&!f1.ate)return 'Informe até que horas foi a extra do 2º turno.';
   }
-  if(!r.atividades.length)return 'Descreva pelo menos uma atividade do dia.';
+  if(!r.atividades.length)return 'Aponte pelo menos um spool em Atividades do dia.';
+  const activityError=window.RDOApontamento?.validate();if(activityError)return activityError;
   return null;
 }
 function msg(el,text,kind){el.textContent=text;el.className='banner '+kind;el.hidden=!text}
@@ -598,38 +612,56 @@ function msg(el,text,kind){el.textContent=text;el.className='banner '+kind;el.hi
 function saveDraft(){if(editingId)return;try{RDO.draftSet('draft',readForm())}catch(e){}}
 function loadDraft(){try{const d=RDO.draftGet('draft');if(d)return d}catch(e){}return null}
 function clearDraft(){try{RDO.draftRemove('draft')}catch(e){}}
+window.addEventListener('rdo-activities-change',saveDraft);
+for(const eventName of ['input','change'])$('#p-form').addEventListener(eventName,ev=>{if(/^(e-|h[12]-|he-ate$)/.test(ev.target.id||''))countsDirty=true;});
 let draftT;$('#p-form').addEventListener('input',ev=>{clearTimeout(draftT);draftT=setTimeout(saveDraft,400);if(ev.target.id==='f-data')checkDup()});
-$('#f-data').addEventListener('change',()=>{applyJornada();checkDup()});$('#f-local').addEventListener('change',()=>{checkDup();saveDraft()});
-$('#f-turno').addEventListener('change',()=>{applyJornada();checkDup()});
+$('#f-data').addEventListener('change',()=>{applyJornada();restoreCounts(true);restoreActivities(true);checkDup()});$('#f-local').addEventListener('change',()=>{restoreCounts(true);restoreActivities(true);checkDup();saveDraft()});
+$('#f-turno').addEventListener('change',()=>{applyJornada();restoreCounts(true);restoreActivities(true);checkDup()});
 
 function checkDup(){
   const l=$('#f-local').value,d=$('#f-data').value,t=$('#f-turno').value;
   const hit=records.find(r=>r.id!==editingId&&r.data===d&&r.localId===l&&(r.turno||'1')===t);
-  if(l&&d&&hit){$('#dup').hidden=false;$('#dup').innerHTML='';const t=document.createElement('span');t.textContent='Já existe um RDO deste local nesta data e turno. ';const b=document.createElement('button');b.type='button';b.className='btn ghost';b.style.padding='4px 10px';b.textContent='Abrir para editar';b.onclick=()=>startEdit(hit.id);$('#dup').append(t,b)}
+  const viewingSaved=Boolean(l&&d&&hit&&!editingId);$('#form-actions').hidden=viewingSaved;
+  for(const name of ['e-mec','e-tub','e-sol','h1-mec','h1-tub','h1-sol','h2-mec','h2-tub','h2-sol','he-ate','f-obs'])$('#'+name).readOnly=viewingSaved;
+  if(l&&d&&hit){
+    $('#dup').hidden=false;$('#dup').innerHTML='';const t=document.createElement('span');t.textContent='Já existe um RDO deste local nesta data e turno. ';
+    const b=document.createElement('button');b.type='button';b.className='btn ghost';b.style.padding='4px 10px';b.textContent='Abrir para editar';b.onclick=()=>startEdit(hit.id);
+    const download=document.createElement('button');download.type='button';download.className='btn';download.textContent='Enviar e baixar Excel';
+    download.onclick=async()=>{download.disabled=true;try{await saveFile($('#form-msg'),'RDO_'+hit.data+'.xlsx',()=>buildBook([hit]),'Excel gerado do RDO salvo',1);}finally{download.disabled=false;}};
+    $('#dup').append(t,b,download);
+  }
   else $('#dup').hidden=true;
 }
 
 /* ---------- salvar ---------- */
 $('#p-form').addEventListener('submit',async ev=>{
   ev.preventDefault();
-  const r=readForm();const err=validate(r);const box=$('#form-msg');
+  if($('#form-actions').hidden)return;
+  const r=readForm();const existing=!editingId&&records.find(item=>item.localId===r.localId&&item.data===r.data&&(item.turno||'1')===r.turno);
+  if(existing){
+    r.apontamentos=[...new Map([...(existing.apontamentos||[]),...(r.apontamentos||[])].map(point=>[String(point.spoolId),point])).values()];
+    r.atividades=[...new Map([...(existing.atividades||[]),...(r.atividades||[])].map(activity=>[activity.spoolId?'spool:'+activity.spoolId:'texto:'+JSON.stringify([activity.lote,activity.descricao]),activity])).values()];
+  }
+  const err=validate(r);const box=$('#form-msg');
   if(err){msg(box,err,'bad');return}
   if(!db){msg(box,'Sem conexão com o banco de dados. O rascunho ficou salvo neste aparelho; tente enviar de novo quando abrir a página com acesso.','bad');saveDraft();return}
-  const btn=$('#save');btn.disabled=true;btn.textContent='Enviando…';
+  const btn=$('#save');btn.disabled=true;btn.textContent='Enviando…';$('#p-form').inert=true;
   try{
     const now=new Date().toISOString();let savedRecord;
-    if(editingId){
-      const old=records.find(x=>x.id===editingId)||{};
+    const targetId=editingId||records.find(item=>item.localId===r.localId&&item.data===r.data&&(item.turno||'1')===r.turno)?.id;
+    if(targetId){
+      const old=records.find(x=>x.id===targetId)||{};
       const {_uid,id,...keep}=old;
-      await db.doc('rdo/'+(_uid||myId)+'/itens/'+editingId).set({...r,criadoEm:old.criadoEm||now,autor:old.autor||myId||null,editadoEm:now,editadoPor:myId||null});
-      savedRecord={...r,id:editingId,criadoEm:old.criadoEm||now};msg(box,'RDO atualizado.','ok');
+      await db.doc('rdo/'+(_uid||myId)+'/itens/'+targetId).set({...r,criadoEm:old.criadoEm||now,autor:old.autor||myId||null,editadoEm:now,editadoPor:myId||null});
+      savedRecord={...r,id:targetId,criadoEm:old.criadoEm||now};msg(box,'RDO atualizado.','ok');
     }else{
       if(!myId)throw{code:'no_user'};
       const created=await db.collection('rdo/'+myId+'/itens').add({...r,criadoEm:now,autor:myId});savedRecord={...r,id:created.id,criadoEm:now};
       db.doc('rdo/'+myId).set({ultimoEnvio:now}).catch(()=>{});
       msg(box,'RDO de '+br(r.data)+' enviado. Obrigado!','ok');
     }
-    if(ev.submitter?.id==='save-download')await saveFile(box,'RDO_'+r.data+'.xlsx',()=>buildBook([savedRecord]),'RDO salvo e Excel gerado',1);
+    records=[...records.filter(item=>item.id!==savedRecord.id),{...savedRecord,_uid:myId}].sort((a,b)=>b.data.localeCompare(a.data));
+    window.RDOActivityRecords=records;window.RDOApontamento?.setRecords(records);renderList();resumo.update(records);
     clearDraft();resetForm(true);window.scrollTo({top:0});
   }catch(e){
     const code=e&&e.code;
@@ -638,7 +670,7 @@ $('#p-form').addEventListener('submit',async ev=>{
              code==='quota_exceeded'?'O banco de dados está cheio. Avise o responsável pela planilha.':
              'Não foi possível enviar agora (sinal fraco?). O rascunho ficou salvo neste aparelho; tente de novo em instantes.','bad');
     saveDraft();
-  }finally{btn.disabled=false;btn.textContent=editingId?'Salvar alterações':'Salvar RDO'}
+  }finally{$('#p-form').inert=false;btn.disabled=false;btn.textContent=editingId?'Salvar alterações':'Salvar RDO'}
 });
 
 function startEdit(id){
@@ -773,19 +805,20 @@ function buildBook(rows,weekIso){
     'Total func. na extra':sumHE(r),
     'Atividades':(r.atividades||[]).map(a=>(a.lote?'Lote '+a.lote+': ':'')+a.descricao).join(' | '),
     'Observações':r.observacoes||'','Enviado em':r.criadoEm?new Date(r.criadoEm):'','ID':r.id}});
-  const acts=[];rows.forEach(r=>(r.atividades||[]).forEach(a=>acts.push({
-    'Data':parseIso(r.data),'Local':r.local||'','Responsável':r.supervisor,'Turno':r.turno==='2'?'2º':'1º','Lote':/^\d+$/.test(a.lote)?Number(a.lote):a.lote,
-    'Descrição':a.descricao,'ID RDO':r.id})));
+  const acts=[];rows.forEach(r=>(r.atividades||[]).forEach(a=>{const source=a.snapshot||{};acts.push({
+    'Data do RDO':parseIso(r.data),'Local / equipe':r.local||'','Responsável':r.supervisor,'Conta (e-mail)':r.autor_email||RDO.user().email,'Turno':r.turno==='2'?'2º':'1º',
+    'Serviço':source['SERVIÇO']||'','Lote':/^\d+$/.test(a.lote)?Number(a.lote):a.lote,'Isométrico':source['ISOMÉTRICO']||'','Spool':source.SPOOL||'','ID Spool':a.spoolId||'',
+    'Data do apontamento':a.data?parseIso(a.data):'','Observação do apontamento':a.observacao||'','Descrição':a.descricao||'','ID RDO':r.id});}));
   const wb=XLSX.utils.book_new();
   if(weekIso)XLSX.utils.book_append_sheet(wb,resumoSheet(weekIso),'Resumo');
   const s1=XLSX.utils.json_to_sheet(rdo,{cellDates:true,dateNF:'dd/mm/yyyy'});
   s1['!cols']=[{wch:11},{wch:9},{wch:24},{wch:30},{wch:11},{wch:9},{wch:50},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:12},{wch:10},{wch:60},{wch:40},{wch:17},{wch:22}];
   const s2=XLSX.utils.json_to_sheet(acts,{cellDates:true,dateNF:'dd/mm/yyyy'});
-  s2['!cols']=[{wch:11},{wch:24},{wch:30},{wch:6},{wch:7},{wch:60},{wch:22}];
+  s2['!cols']=[{wch:13},{wch:24},{wch:30},{wch:30},{wch:9},{wch:16},{wch:9},{wch:44},{wch:14},{wch:16},{wch:21},{wch:44},{wch:55},{wch:38}];
   [s1,s2].forEach(s=>{for(const k in s){if(k[0]!=='!'&&s[k].t==='d'){
     const c=XLSX.utils.decode_cell(k).c;const h=s[XLSX.utils.encode_cell({r:0,c})];
     s[k].z=(h&&h.v==='Enviado em')?'dd/mm/yyyy hh:mm':'dd/mm/yyyy'}}});
-  XLSX.utils.book_append_sheet(wb,s1,'RDO');XLSX.utils.book_append_sheet(wb,s2,'Atividades');
+  XLSX.utils.book_append_sheet(wb,s1,'RDO');XLSX.utils.book_append_sheet(wb,s2,'Atividades do dia');
   const ws=[...new Set(rows.map(r=>iso(mondayOf(parseIso(r.data)))))].sort().map(w=>{const s=semanas[w];return{
     'Semana (segunda)':parseIso(w),'Até (domingo)':addDays(parseIso(w),6),
     'Enviado à obra':s&&s.enviadoObraEm?'Sim':'Não','Data do envio':s&&s.enviadoObraEm?new Date(s.enviadoObraEm):''}});
@@ -851,10 +884,11 @@ renderList();
   async function reload(){
    const [rows,weeks]=await Promise.all([RDO.list('rdo_registros'),RDO.list('rdo_semanas')]);
    records=rows.map(r=>({...r.conteudo,id:r.id,_uid:r.user_id})).sort((a,b)=>b.data.localeCompare(a.data));
+   window.RDOActivityRecords=records;window.RDOApontamento?.setRecords(records);
    semanas=Object.fromEntries(weeks.map(r=>[r.id,r.conteudo]));renderList();checkDup();resumo.update(records);
   }
   window.addEventListener('rdo-change',()=>reload().catch(e=>msg($('#status'),e.message,'bad')));
-  await reload();if(savedTab==='sum')show('sum');msg($('#status'),'','ok');
+  await reload();restoreCounts();restoreActivities();if(savedTab==='sum')show('sum');msg($('#status'),'','ok');
  }catch(e){msg($('#status'),e.message,'bad');}
 
 })();

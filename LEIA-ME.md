@@ -26,23 +26,25 @@ Este novo RDO exige conexão para autenticar, salvar no banco, consultar registr
 
 ### Lançar RDO
 
-Mantém o formulário fornecido: local/equipe, data, turno, efetivo, hora extra, atividades por Lote e observações. Salvar RDO envia ao Supabase. Salvar e baixar Excel também gera o arquivo correspondente àquele registro, guarda uma cópia privada e inicia o download. Erros ao gerar o Excel não apagam o RDO que já foi salvo.
+Reúne local/equipe, data, turno, efetivo, hora extra, Atividades do dia e observações. As atividades agora são os spools apontados dentro do próprio formulário. Marque ou desmarque a caixa de cada spool para incluí-lo ou retirá-lo do RDO. Não há modal nem observação por spool. A data de todos os itens selecionados acompanha automaticamente a data do RDO, inclusive ao alterar o dia antes de salvar. A observação geral do RDO permanece disponível. Observações antigas continuam preservadas nos registros e exportações. A gravação no Supabase acontece ao salvar o RDO, incluindo as atividades em uma única operação. Ao editar um RDO existente, salve as alterações para efetivar a retirada de um spool.
+
+Enviar e baixar Excel gera o arquivo daquele registro, guarda uma cópia privada e inicia o download. Erros ao gerar o Excel não apagam o RDO já salvo. Atividades digitadas nas versões anteriores continuam preservadas nos registros e nas exportações.
 
 ### Registros e Resumo
 
-Permitem consultar e editar os próprios lançamentos, visualizar a semana, gerar o Excel da semana ou completo e baixar o dashboard HTML. As exportações são guardadas no histórico da conta. O Excel mantém RDO, Atividades e Envio à obra, e inclui Resumo quando exportado por semana. A conta autenticada aparece no Excel, além do responsável/equipe do formulário original.
+Permitem consultar e editar os próprios lançamentos, visualizar a semana, gerar o Excel da semana ou completo e baixar o dashboard HTML. As exportações são guardadas no histórico da conta. O Excel contém RDO, Atividades do dia e Envio à obra, e inclui Resumo quando exportado por semana. Cada linha de atividade identifica o RDO, local/equipe, serviço, Lote, isométrico, spool, ID do spool, data e observação. Só entram as atividades vinculadas aos RDOs exportados. A conta autenticada aparece no Excel, além do responsável/equipe do formulário original.
 
 Os RDOs que estavam salvos nos serviços do Claude não são copiados automaticamente: o HTML fornecido não contém esses registros. A nova integração funciona diretamente na Vercel, sem depender do Claude.
 
-### Apontamento
+### Atividades do dia, dentro de Lançar RDO
 
 A fonte é a mesma tabela MySQL TB_STG_MAPA_SPOOLS usada pelas consultas da planilha Spools.xlsx. A leitura é feita somente pelo servidor e exige login no Supabase. Não existe escrita no MySQL de origem.
 
-PROG FAB é apresentado como Lote no filtro, na lista e no Excel. Há filtro de Serviço, Lote e busca por isométrico/spool/QR; a lista é paginada. Apontar abre somente data e observação. Cada conta tem um apontamento atual por spool; editar atualiza esse apontamento. As cópias Excel já geradas permanecem preservadas.
+PROG FAB é apresentado como Lote. Há filtros de Serviço, Lote, Isométrico/ID e situação (Todos, Pendentes, Apontados ou Neste RDO); a lista é paginada e adapta-se a cartões no celular. CORTE/BISEL preenchido com data válida aparece como Apontado, sem Editar ou Limpar. Spools vinculados a outro RDO da mesma conta, ou apontamentos independentes das versões anteriores, também são exibidos como já apontados, sem incluí-los automaticamente em um novo RDO. Somente os spools escolhidos para o RDO atual integram suas atividades e podem ser marcados ou desmarcados no formulário. As cópias Excel anteriores permanecem preservadas.
 
-A exportação Baixar apontamentos considera somente os spools apontados dentro dos filtros atuais. Usa Lote, Data do apontamento, Observação do apontamento e Responsável (e-mail), sem DATA DO ROMANEIO, OBS ROMANEIO ou ROMANEIOS. Os demais dados técnicos de cada spool são mantidos no Excel.
+Não existe mais uma aba separada de Apontamento nem exportação isolada da seleção filtrada: use Enviar e baixar Excel ou as exportações de Registros e Resumo. As novas atividades ficam no JSON de rdo_registros, sob apontamentos e atividades, protegidas pelas mesmas regras de acesso do RDO. Nenhuma alteração adicional no SQL é necessária para quem já aplicou banco-rdo.sql. rdo_apontamentos continua sendo consultada para preservar os apontamentos independentes antigos.
 
-Ao abrir a aba, tenta buscar o MySQL. Se a consulta não concluir, usa Spools.xlsx como reserva inicial e informa essa origem. A base é carregada uma vez por abertura da página; recarregue a página para uma nova leitura. Não há consulta periódica em segundo plano.
+Ao abrir o app, tenta buscar o MySQL. Se a consulta não concluir, usa Spools.xlsx como reserva inicial e informa essa origem. A base é carregada uma vez por abertura da página; recarregue a página para uma nova leitura. Não há consulta periódica em segundo plano. Spools.xlsx fornecido não contém CORTE/BISEL; o preenchimento dessa data depende da coluna retornada pelo MySQL.
 
 ### Histórico e cópias
 
@@ -57,3 +59,11 @@ O certificado público fixado do MySQL fica em server/mysql-server.pem. Se a hos
 ## Conferências realizadas
 
 Sintaxe de todas as páginas; preenchimento de RDO e apontamento na prévia local; filtro por Lote; XLSX reais gerados e reabertos com nomes e dados corretos; rascunhos separados por usuário; regras SQL reais de isolamento, e-mail autenticado, histórico imutável, bucket privado e bloqueio de metadados sem arquivo. Os dados artificiais usados nos testes SQL foram revertidos.
+
+Após Salvar RDO, Enviar e baixar Excel usa o registro recém-salvo, sem abrir Editar e sem criar outro RDO. Se preencher um novo relatório ou abrir outro para editar, o botão passa a salvar e exportar o formulário atual.
+
+Efetivo, hora extra e atividades do RDO salvo continuam visíveis para a mesma equipe, data e turno, sem abrir Editar. Os spools salvos mostram Apontado e permanecem vinculados ao registro; Editar habilita desmarcar e Salvar alterações efetiva a retirada. Adicionar novos spools à mesma equipe/data/turno atualiza o RDO existente, preservando as atividades anteriores, em vez de criar outro registro.
+
+Quando já existe RDO para equipe/data/turno, a tela exibe os dados salvos para consulta e oculta os botões do formulário. Abrir para editar habilita os campos e mostra Salvar alterações, Enviar e baixar Excel e Cancelar edição. Cancelar ou concluir o salvamento retorna à consulta. Para uma combinação sem RDO, Salvar RDO e Enviar e baixar Excel ficam disponíveis normalmente.
+
+Fluxo atual dos botões: no rodapé ficam apenas Salvar RDO ou, durante a edição, Salvar alterações e Cancelar edição. Após salvar, Enviar e baixar Excel fica no aviso do registro existente, ao lado de Abrir para editar; esse é o botão para exportar o RDO salvo.
