@@ -5,7 +5,7 @@
  document.addEventListener('DOMContentLoaded',async()=>{
   const $=id=>document.getElementById(id),message=$('message'),inputs=['search-name','search-team','date-from','date-to'];
   try{
-   await RDO.ready;const files=await RDO.history();
+   await RDO.ready;let files=await RDO.history();
    const render=()=>{
     const filters={name:$('search-name').value.trim(),team:$('search-team').value.trim(),from:$('date-from').value,to:$('date-to').value};
     $('files').replaceChildren();if(filters.from&&filters.to&&filters.from>filters.to){message.textContent='A data inicial deve ser anterior ou igual à data final.';return;}
@@ -18,6 +18,7 @@
      item.append(name,info,button);$('files').append(item);
     }
    };
+   window.addEventListener('rdo-history-updated',async()=>{try{files=await RDO.history();render();}catch(e){message.textContent=e.message;}});
    inputs.forEach(id=>$(id).addEventListener('input',render));$('clear-filters').onclick=()=>{inputs.forEach(id=>$(id).value='');render();};render();
   }catch(e){message.textContent=e.message;}
  });

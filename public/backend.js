@@ -36,6 +36,16 @@
  const api={
   ready:null,user,rest,list,save,remove,
   async isAdmin(){await api.ready;return (await request('/rest/v1/rpc/rdo_admin',{method:'POST',body:'{}'},await token()))===true;},
+  async reportRecords({from='',to=''}={}){
+   const admin=await api.isAdmin(),all=[];
+   for(let offset=0;;offset+=500){
+    const query=new URLSearchParams({select:'id,user_id,conteudo',order:'id',offset:String(offset),limit:'500'});
+    if(from)query.append('conteudo->>data','gte.'+from);if(to)query.append('conteudo->>data','lte.'+to);
+    const rows=await rest('rdo_registros?'+query,{headers:admin?{'x-rdo-admin':'true'}:{}});
+    all.push(...rows.map(row=>({...row.conteudo,id:row.id,user_id:row.user_id})));
+    if(rows.length<500)return {admin,records:all};
+   }
+  },
   async login(email,password){await api.ready;const s=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})});remember({...s,expires_at:Math.floor(Date.now()/1000)+(s.expires_in||3600)});},
   async signup(email,password){await api.ready;return request('/auth/v1/signup?redirect_to='+encodeURIComponent(new URL('login.html',location.href).href),{method:'POST',body:JSON.stringify({email,password})});},
   async recover(email){await api.ready;return request('/auth/v1/recover?redirect_to='+encodeURIComponent(new URL('login.html',location.href).href),{method:'POST',body:JSON.stringify({email})});},

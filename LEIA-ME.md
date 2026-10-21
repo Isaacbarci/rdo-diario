@@ -75,3 +75,6 @@ administrador-rdo.sql libera historico global para isaacbarci@gmail.com confirma
 
 ## Histórico e nomes dos downloads
 O histórico permite pesquisar por nome, equipe e intervalo de geração. Novos downloads individuais usam RDO_DATA_EQUIPE_TURNO.xlsx e guardam a equipe e a data do RDO. Arquivos anteriores continuam com seus nomes originais. Em bancos existentes, aplicar historico-filtros.sql antes de publicar.
+
+## Download geral por período
+Na tela Histórico e cópias, o formulário Baixar geral por período consulta todos os RDOs salvos no banco pela data do relatório, incluindo registros sem arquivos gerados. Permite selecionar equipe e turno. Administradores consultam todas as contas pela política administrativa existente; demais contas permanecem restritas por RLS. O Excel contém RDO e Atividades do dia e uma cópia é arquivada no histórico. Não requer novo SQL.
