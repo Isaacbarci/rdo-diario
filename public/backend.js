@@ -29,6 +29,7 @@
  function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
  const api={
   ready:null,user,rest,list,save,remove,
+  async isAdmin(){await api.ready;return (await request('/rest/v1/rpc/rdo_admin',{method:'POST',body:'{}'},await token()))===true;},
   async login(email,password){await api.ready;const s=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})});remember({...s,expires_at:Math.floor(Date.now()/1000)+(s.expires_in||3600)});},
   async signup(email,password){await api.ready;return request('/auth/v1/signup?redirect_to='+encodeURIComponent(new URL('login.html',location.href).href),{method:'POST',body:JSON.stringify({email,password})});},
   async recover(email){await api.ready;return request('/auth/v1/recover?redirect_to='+encodeURIComponent(new URL('login.html',location.href).href),{method:'POST',body:JSON.stringify({email})});},
@@ -40,12 +41,12 @@
    await api.ready;const response=await fetch('/api/catalogo?modulo=spool',{cache:'no-store',signal:AbortSignal.timeout(65000),headers:{Authorization:'Bearer '+await token()}});
    if(!response.ok)throw Error('Não foi possível atualizar a base pelo MySQL.');const value=await response.json();if(value.module!=='spool'||!value.rows?.length)throw Error('Base de spools inválida.');return value;
   },
-  async exportFile({blob,name,type,items=0}){
+  async exportFile({blob,name,type,items=0,equipe='',turno='',dataRdo=null}){
    await api.ready;const id=crypto.randomUUID(),owner=user().id,path=owner+'/'+id+(name.endsWith('.xlsx')?'.xlsx':'.html');
    const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await blob.arrayBuffer())),b=>b.toString(16).padStart(2,'0')).join('');
    if(blob.size>20971520)throw Error('O arquivo ultrapassou 20 MB.');
    await request('/storage/v1/object/rdo-arquivos/'+path,{method:'POST',headers:{'Content-Type':blob.type,'x-upsert':'false'},body:blob},await token());
-   await rest('rdo_arquivos',{method:'POST',body:JSON.stringify({id,user_id:owner,tipo:type,nome:name,caminho:path,tamanho:blob.size,sha256:hash,itens:items})});
+   await rest('rdo_arquivos',{method:'POST',body:JSON.stringify({id,user_id:owner,tipo:type,nome:name,caminho:path,tamanho:blob.size,sha256:hash,itens:items,equipe,turno,data_rdo:dataRdo})});
    download(blob,name);
   },
   async history(){const all=[];for(let offset=0;;offset+=500){const part=await rest('rdo_arquivos?select=*&order=criado_em.desc,id&offset='+offset+'&limit=500');all.push(...part);if(part.length<500)return all;}},

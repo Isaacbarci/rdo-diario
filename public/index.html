@@ -108,7 +108,7 @@ textarea{resize:vertical;min-height:70px}
 
   <div id="status" class="banner warn" hidden></div>
 
-  <div class="account"><span id="account-email"></span><a href="historico.html">Histórico e cópias</a><button type="button" id="logout" class="btn ghost">Sair</button></div><nav class="tabs" role="tablist">
+  <div class="account"><span id="account-email"></span><a href="historico.html">Histórico e cópias</a><a href="administracao.html" id="admin-link" hidden>Administração</a><button type="button" id="logout" class="btn ghost">Sair</button></div><nav class="tabs" role="tablist">
     <button class="tab" id="tab-form" role="tab" aria-selected="true" aria-controls="p-form">Lançar RDO</button>
     <button class="tab" id="tab-list" role="tab" aria-selected="false" aria-controls="p-list">Registros</button>
     <button class="tab" id="tab-sum" role="tab" aria-selected="false" aria-controls="p-sum">Resumo</button>
@@ -627,7 +627,7 @@ function checkDup(){
     $('#dup').hidden=false;$('#dup').innerHTML='';const t=document.createElement('span');t.textContent='Já existe um RDO deste local nesta data e turno. ';
     const b=document.createElement('button');b.type='button';b.className='btn ghost';b.style.padding='4px 10px';b.textContent='Abrir para editar';b.onclick=()=>startEdit(hit.id);
     const download=document.createElement('button');download.type='button';download.className='btn';download.textContent='Enviar e baixar Excel';
-    download.onclick=async()=>{download.disabled=true;try{await saveFile($('#form-msg'),'RDO_'+hit.data+'.xlsx',()=>buildBook([hit]),'Excel gerado do RDO salvo',1);}finally{download.disabled=false;}};
+    download.onclick=async()=>{download.disabled=true;try{await saveFile($('#form-msg'),rdoFilename(hit),()=>buildBook([hit]),'Excel gerado do RDO salvo',1,{equipe:rdoTeamName(hit),turno:String(hit.turno||'1'),dataRdo:hit.data});}finally{download.disabled=false;}};
     $('#dup').append(t,b,download);
   }
   else $('#dup').hidden=true;
@@ -830,8 +830,10 @@ function buildBook(rows,weekIso){
   XLSX.utils.book_append_sheet(wb,s3,'Envio à obra');
   return XLSX.write(wb,{type:'array',bookType:'xlsx'});
 }
-async function saveFile(box,name,make,okText,items=0){
- try{const data=make(),excel=name.endsWith('.xlsx');const blob=new Blob([data],{type:excel?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'text/html;charset=utf-8'});await RDO.exportFile({blob,name,type:excel?'rdo_excel':'rdo_dashboard',items});msg(box,okText+': '+name,'ok');}
+function rdoTeamName(r){return String(r.supervisor||LOCAIS[r.localId]?.resp||'Equipe').replace(/\b(?:encarregado|técnico|engenheiro)\s+/gi,'').trim()||'Equipe';}
+function rdoFilename(r){const team=rdoTeamName(r).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,100)||'Equipe';return 'RDO_'+team+'_'+(String(r.turno)==='2'?'2':'1')+'-turno_'+r.data+'.xlsx';}
+async function saveFile(box,name,make,okText,items=0,metadata={}){
+ try{const data=make(),excel=name.endsWith('.xlsx');const blob=new Blob([data],{type:excel?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'text/html;charset=utf-8'});await RDO.exportFile({blob,name,type:excel?'rdo_excel':'rdo_dashboard',items,...metadata});msg(box,okText+': '+name,'ok');}
  catch(e){msg(box,'O registro permanece salvo. Não foi possível concluir o arquivo: '+e.message,'bad');return false;}
 }
 function xlsx(box,rows,name,weekIso){
@@ -881,6 +883,7 @@ renderList();
 (async()=>{
  try{
   await RDO.ready;myId=RDO.user().id;db=RDO.adapter();isOwner=true;canWrite=true;applyRole();
+  RDO.isAdmin().then(admin=>{$('#admin-link').hidden=!admin;}).catch(()=>{});
   $('#account-email').textContent=RDO.user().email;$('#logout').onclick=()=>{saveDraft();RDO.logout();};
   const restore=loadDraft();if(restore)fillForm(restore);
   async function reload(){

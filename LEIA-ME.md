@@ -67,3 +67,11 @@ Efetivo, hora extra e atividades do RDO salvo continuam visíveis para a mesma e
 Quando já existe RDO para equipe/data/turno, a tela exibe os dados salvos para consulta e oculta os botões do formulário. Abrir para editar habilita os campos e mostra Salvar alterações, Enviar e baixar Excel e Cancelar edição. Cancelar ou concluir o salvamento retorna à consulta. Para uma combinação sem RDO, Salvar RDO e Enviar e baixar Excel ficam disponíveis normalmente.
 
 Fluxo atual dos botões: no rodapé ficam apenas Salvar RDO ou, durante a edição, Salvar alterações e Cancelar edição. Após salvar, Enviar e baixar Excel fica no aviso do registro existente, ao lado de Abrir para editar; esse é o botão para exportar o RDO salvo.
+
+
+## Administracao do RDO
+
+administrador-rdo.sql libera historico global para isaacbarci@gmail.com confirmado. RDOs normais continuam separados por conta; acesso administrativo pela API exige x-rdo-admin: true. Administracao aparece apos verificacao no banco e abre a gestao de dados, usuarios e configuracoes no painel Supabase, onde a conta ja possui papel Owner. Alteracoes e exclusoes nao sao executadas automaticamente por essa configuracao.
+
+## Histórico e nomes dos downloads
+O histórico permite pesquisar por nome, equipe e intervalo de geração. Novos downloads individuais usam RDO_DATA_EQUIPE_TURNO.xlsx e guardam a equipe e a data do RDO. Arquivos anteriores continuam com seus nomes originais. Em bancos existentes, aplicar historico-filtros.sql antes de publicar.
