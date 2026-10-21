@@ -33,6 +33,15 @@ function jornadaTexto(j){
   return 'Normal até '+j.fimNormal+' · extra até '+j.faixas[0]+' ou até '+j.faixas[1];
 }
 function buildReportBook(rows){
+  // O peso é o que foi guardado no spool do RDO, sem substituir por valores atuais do catálogo.
+  function activityWeight(a,r){
+    const raw=a.snapshot?.PESO??(r.apontamentos||[]).find(p=>String(p.spoolId)===String(a.spoolId))?.snapshot?.PESO;
+    if(raw==null||String(raw).trim()==='')return null;
+    const value=typeof raw==='number'?raw:Number(String(raw).trim().includes(',')?String(raw).trim().replace(/\./g,'').replace(',','.'):String(raw).trim());
+    return Number.isFinite(value)&&value>=0?value:null;
+  }
+  function totalWeight(r){const activities=r.atividades||[];if(activities.some(a=>a.spoolId&&activityWeight(a,r)==null))return '';const values=activities.map(a=>activityWeight(a,r)).filter(v=>v!=null);return values.length?values.reduce((sum,v)=>sum+v,0):'';}
+
   // Datas civis são números inteiros no Excel; não passam por conversão de fuso da biblioteca.
   const excelDay=value=>{const [y,m,d]=String(value).split('-').map(Number);return (Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/86400000;};
   const excelMoment=value=>{const d=new Date(value);return (Date.UTC(d.getFullYear(),d.getMonth(),d.getDate(),d.getHours(),d.getMinutes(),d.getSeconds())-Date.UTC(1899,11,30))/86400000;};
@@ -49,17 +58,20 @@ function buildReportBook(rows){
     'Extra fim de semana':fd?sum(fd):'',
     'Total func. na extra':sumHE(r),
     'Atividades':(r.atividades||[]).map(a=>(a.lote?'Lote '+a.lote+': ':'')+a.descricao).join(' | '),
-    'Observações':r.observacoes||'','Enviado em':r.criadoEm?excelMoment(r.criadoEm):'','ID':r.id}});
+    'Peso total (kg)':totalWeight(r),'Observações':r.observacoes||'','Enviado em':r.criadoEm?excelMoment(r.criadoEm):'','ID':r.id}});
   const acts=[];rows.forEach(r=>(r.atividades||[]).forEach(a=>{const source=a.snapshot||{};acts.push({
     'Data do RDO':excelDay(r.data),'Local / equipe':r.local||'','Responsável':r.supervisor,'Conta (e-mail)':r.autor_email||'','Turno':r.turno==='2'?'2º':'1º',
     'Serviço':source['SERVIÇO']||'','Lote':/^\d+$/.test(a.lote)?Number(a.lote):a.lote,'Isométrico':source['ISOMÉTRICO']||'','Spool':source.SPOOL||'','ID Spool':a.spoolId||'',
-    'Data do apontamento':a.data?excelDay(a.data):'','Observação do apontamento':a.observacao||'','Descrição':a.descricao||'','ID RDO':r.id});}));
+    'Data do apontamento':a.data?excelDay(a.data):'','Peso (kg)':activityWeight(a,r)??'','Observação do apontamento':a.observacao||'','Descrição':a.descricao||'','ID RDO':r.id});}));
   const wb=XLSX.utils.book_new();
   const s1=XLSX.utils.json_to_sheet(rdo,{cellDates:true,dateNF:'dd/mm/yyyy'});
   s1['!cols']=[{wch:11},{wch:9},{wch:24},{wch:30},{wch:11},{wch:9},{wch:50},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:12},{wch:10},{wch:60},{wch:40},{wch:17},{wch:22}];
   const s2=XLSX.utils.json_to_sheet(acts,{cellDates:true,dateNF:'dd/mm/yyyy'});
   s2['!cols']=[{wch:13},{wch:24},{wch:30},{wch:30},{wch:9},{wch:16},{wch:9},{wch:44},{wch:14},{wch:16},{wch:21},{wch:44},{wch:55},{wch:38}];
+  s1['!cols'].splice(23,0,{wch:18});s2['!cols'].splice(11,0,{wch:18});
   [s1,s2].forEach(formatDates);
+  for(const sheet of [s1,s2]){for(const [key,cell] of Object.entries(sheet)){if(key[0]==='!'||cell.t!=='n')continue;const column=XLSX.utils.decode_cell(key).c,header=sheet[XLSX.utils.encode_cell({r:0,c:column})]?.v;if(['Peso (kg)','Peso total (kg)'].includes(header)){cell.z='#,##0.000';sheet['!cols'][column]={wch:18};}}}
+
   XLSX.utils.book_append_sheet(wb,s1,'RDO');XLSX.utils.book_append_sheet(wb,s2,'Atividades do dia');
   return XLSX.write(wb,{type:'array',bookType:'xlsx'});
 }
