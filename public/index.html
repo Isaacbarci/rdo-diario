@@ -831,7 +831,8 @@ function buildBook(rows,weekIso){
   return XLSX.write(wb,{type:'array',bookType:'xlsx'});
 }
 function rdoTeamName(r){return String(r.supervisor||LOCAIS[r.localId]?.resp||'Equipe').replace(/\b(?:encarregado|técnico|engenheiro)\s+/gi,'').trim()||'Equipe';}
-function rdoFilename(r){const team=rdoTeamName(r).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,100)||'Equipe';return 'RDO_'+team+'_'+(String(r.turno)==='2'?'2':'1')+'-turno_'+r.data+'.xlsx';}
+function fileDate(value){return String(value).split('-').reverse().join('-');}
+function rdoFilename(r){const team=rdoTeamName(r).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,100)||'Equipe';return 'RDO_'+team+'_'+(String(r.turno)==='2'?'2':'1')+'-turno_'+fileDate(r.data)+'.xlsx';}
 async function saveFile(box,name,make,okText,items=0,metadata={}){
  try{const data=make(),excel=name.endsWith('.xlsx');const blob=new Blob([data],{type:excel?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'text/html;charset=utf-8'});await RDO.exportFile({blob,name,type:excel?'rdo_excel':'rdo_dashboard',items,...metadata});msg(box,okText+': '+name,'ok');}
  catch(e){msg(box,'O registro permanece salvo. Não foi possível concluir o arquivo: '+e.message,'bad');return false;}
@@ -865,13 +866,13 @@ mountResumo(document.getElementById('root'),{records:${json(records.map(({id,...
 function dash(box,weekIso){
   if(!records.length){msg(box,'Ainda não há RDOs lançados para montar o dashboard.','warn');return}
   const ws=parseIso(weekIso);
-  saveFile(box,`Dashboard_RDO_${iso(ws)}_a_${iso(addDays(ws,6))}.html`,()=>dashboardHTML(weekIso),'Dashboard salvo');
+  saveFile(box,`Dashboard_RDO_${fileDate(iso(ws))}_a_${fileDate(iso(addDays(ws,6)))}.html`,()=>dashboardHTML(weekIso),'Dashboard salvo');
 }
-$('#dl-week').onclick=()=>{const w=iso(weekStart);xlsx($('#dl-msg'),weekRows(w),`RDO_${w}_a_${iso(addDays(weekStart,6))}.xlsx`,w)};
-$('#dl-all').onclick=()=>xlsx($('#dl-msg'),records,`RDO_completo_${iso(new Date())}.xlsx`);
+$('#dl-week').onclick=()=>{const w=iso(weekStart);xlsx($('#dl-msg'),weekRows(w),`RDO_${fileDate(w)}_a_${fileDate(iso(addDays(weekStart,6)))}.xlsx`,w)};
+$('#dl-all').onclick=()=>xlsx($('#dl-msg'),records,`RDO_completo_${fileDate(iso(new Date()))}.xlsx`);
 $('#dl-dash').onclick=()=>dash($('#dl-msg'),iso(weekStart));
 $('#sum-dash').onclick=()=>dash($('#sum-msg'),resumo.week());
-$('#sum-xlsx').onclick=()=>{const w=resumo.week();xlsx($('#sum-msg'),weekRows(w),`RDO_${w}_a_${iso(addDays(parseIso(w),6))}.xlsx`,w)};
+$('#sum-xlsx').onclick=()=>{const w=resumo.week();xlsx($('#sum-msg'),weekRows(w),`RDO_${fileDate(w)}_a_${fileDate(iso(addDays(parseIso(w),6)))}.xlsx`,w)};
 
 /* ---------- início ---------- */
 let savedTab=null;try{savedTab=localStorage.getItem('rdo-tab')}catch(e){}

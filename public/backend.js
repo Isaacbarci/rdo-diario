@@ -4,10 +4,16 @@
  const change=()=>window.dispatchEvent(new Event('rdo-change'));
  const user=()=>{if(!session?.user?.id)throw Error('Entre na sua conta.');return session.user;};
  function remember(value){session=value;if(value)localStorage.setItem(key,JSON.stringify(value));else localStorage.removeItem(key);}
+ function sessionEnded(value){return ['session_not_found','refresh_token_not_found','refresh_token_already_used','user_not_found'].includes(value?.code)||/session from session_id claim in JWT does not exist/i.test(value?.message||value?.msg||'');}
  async function request(path,options={},token){
   let response;try{response=await fetch(config.supabaseUrl+path,{...options,cache:'no-store',signal:AbortSignal.timeout(20000),headers:{apikey:config.supabaseKey,'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{}),...options.headers}});}catch(_){throw Error('Não foi possível conectar. Seus dados preenchidos permanecem neste aparelho.');}
   const text=await response.text();let value;try{value=text?JSON.parse(text):null;}catch(_){value=null;}
-  if(!response.ok){const e=Error(value?.message||value?.msg||value?.error_description||'Não foi possível concluir.');e.status=response.status;throw e;}return value;
+  if(!response.ok){
+   const ended=sessionEnded(value)&&(token||path.includes('grant_type=refresh_token'));
+   const e=Error(ended?'Sua sessão terminou. Entre novamente para continuar.':value?.message||value?.msg||value?.error_description||'Não foi possível concluir.');e.status=response.status;
+   if(ended){remember(null);if(!loginPage)location.replace('login.html');}
+   throw e;
+  }return value;
  }
  async function token(){
   if(!session?.access_token)throw Error('Entre na sua conta.');
@@ -34,7 +40,7 @@
   async signup(email,password){await api.ready;return request('/auth/v1/signup?redirect_to='+encodeURIComponent(new URL('login.html',location.href).href),{method:'POST',body:JSON.stringify({email,password})});},
   async recover(email){await api.ready;return request('/auth/v1/recover?redirect_to='+encodeURIComponent(new URL('login.html',location.href).href),{method:'POST',body:JSON.stringify({email})});},
   async password(password){await api.ready;return request('/auth/v1/user',{method:'PUT',body:JSON.stringify({password})},await token());},
-  async logout(){try{await request('/auth/v1/logout',{method:'POST'},session?.access_token);}finally{remember(null);location.replace('login.html');}},
+  async logout(){try{await request('/auth/v1/logout?scope=local',{method:'POST'},session?.access_token);}finally{remember(null);location.replace('login.html');}},
   draftGet(name){try{return JSON.parse(localStorage.getItem(localKey(name))||'null');}catch(_){return null;}},
   draftSet(name,value){localStorage.setItem(localKey(name),JSON.stringify(value));},draftRemove(name){localStorage.removeItem(localKey(name));},
   async catalog(){
