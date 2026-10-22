@@ -12,6 +12,10 @@
     "api/usuarios.py": {
       "maxDuration": 60,
       "includeFiles": "server/user_admin.py"
+    },
+    "api/lixeira.py": {
+      "includeFiles": "server/**",
+      "maxDuration": 60
     }
   },
   "headers": [
@@ -32,6 +36,12 @@
           "value": "private, no-store"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/lixeira?cleanup=1",
+      "schedule": "0 6 * * *"
     }
   ]
 }

@@ -78,3 +78,6 @@ O histórico permite pesquisar por nome, equipe e intervalo de geração. Novos 
 
 ## Download geral por período
 Na tela Histórico e cópias, o formulário Baixar geral por período consulta todos os RDOs salvos no banco pela data do relatório, incluindo registros sem arquivos gerados. Permite selecionar equipe e turno. Administradores consultam todas as contas pela política administrativa existente; demais contas permanecem restritas por RLS. O Excel contém RDO e Atividades do dia e uma cópia é arquivada no histórico. Não requer novo SQL.
+
+
+Lixeira (22/10/2026): banco e variáveis protegidas já preparados. As novas exclusões do Histórico são recuperáveis por 30 dias pela conta principal. Consulte LIXEIRA.md. Não execute migrações antigas depois de lixeira-copias.sql.

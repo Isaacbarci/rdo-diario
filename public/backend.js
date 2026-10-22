@@ -36,10 +36,9 @@
  async function canDeleteOwner(id){return id===user().id?api.canDeleteOwnCopies():api.canDeleteCopies();}
  async function finishDelete(job,key){
   if(!await canDeleteOwner(job.userId))throw Error('Sua conta não tem permissão para excluir esta cópia.');
-  const headers={'x-rdo-admin':'true',Prefer:'return=representation'},path='rdo_arquivos?id=eq.'+encodeURIComponent(job.id)+'&user_id=eq.'+encodeURIComponent(job.userId);
-  const rows=await rest(path+'&select=*');
-  if(rows.length){if(rows.length!==1||rows[0].caminho!==job.path)throw Error('Cópia inválida.');const removed=await rest(path,{method:'DELETE',headers});if(removed?.length!==1)throw Error('Exclusão não autorizada.');}
-  try{await request('/storage/v1/object/rdo-arquivos',{method:'DELETE',headers,body:JSON.stringify({prefixes:[job.path]})},await token());localStorage.removeItem(key);}catch(e){throw Error('Registro removido; falta concluir a exclusão do arquivo. A tentativa será retomada ao abrir o Histórico.');}
+  const result=await rest('rpc/rdo_copia_lixeira',{method:'POST',headers:{'x-rdo-admin':'true'},body:JSON.stringify({p_id:job.id})});
+  if(result!==true)throw Error('Não foi possível mover a cópia para a lixeira.');
+  localStorage.removeItem(key);
  }
  async function retryDeletions(){
   const prefix=localKey('delete-copy|');const keys=[];for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key?.startsWith(prefix))keys.push(key);}
@@ -53,6 +52,11 @@
   async manageUsers(payload=null,page=1,search=''){
    await api.ready;if(!navigator.onLine)throw Error('Conecte à internet para gerenciar usuários.');
    let response;try{response=await fetch('/api/usuarios?page='+encodeURIComponent(page)+'&search='+encodeURIComponent(search),{method:payload?'POST':'GET',cache:'no-store',signal:AbortSignal.timeout(45000),headers:{'Content-Type':'application/json',Authorization:'Bearer '+await token()},...(payload?{body:JSON.stringify(payload)}:{})});}catch(e){throw Error('Conexão indisponível. Confira a lista antes de repetir a operação.');}
+   const value=await response.json().catch(()=>null);if(!response.ok)throw Error(value?.message||'Gerenciamento indisponível. Confira a configuração do servidor.');return value;
+  },
+  async manageTrash(payload=null,page=1,search=''){
+   await api.ready;if(!navigator.onLine)throw Error('Conecte à internet para abrir a lixeira.');
+   let response;try{response=await fetch('/api/lixeira?page='+encodeURIComponent(page)+'&search='+encodeURIComponent(search),{method:payload?'POST':'GET',cache:'no-store',signal:AbortSignal.timeout(45000),headers:{'Content-Type':'application/json',Authorization:'Bearer '+await token()},...(payload?{body:JSON.stringify(payload)}:{})});}catch(e){throw Error('Conexão indisponível. Confira a lista antes de repetir a operação.');}
    const value=await response.json().catch(()=>null);if(!response.ok)throw Error(value?.message||'Gerenciamento indisponível. Confira a configuração do servidor.');return value;
   },
   async historyDelete(id){

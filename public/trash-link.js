@@ -1,0 +1,1 @@
+document.addEventListener('DOMContentLoaded',async()=>{try{await RDO.ready;if(!await RDO.isAdmin())return;const a=document.createElement('a');a.href='lixeira.html';a.textContent='Lixeira';a.style.cssText='display:inline-block;margin:12px 0';document.querySelector('h1').after(a);}catch(_){}});
