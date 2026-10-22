@@ -53,11 +53,14 @@
  }
  async function load(){
   try{
-   await RDO.ready;report('Carregando a lista de spools…');let catalog;
+   await RDO.ready;report('Carregando a lista de spools…');
+   const readCatalog=async()=>{let catalog;
    try{catalog=await RDO.catalog();$('ap-source').textContent='Base MySQL · '+new Date(catalog.checkedAt).toLocaleString('pt-BR');}
-   catch(e){const response=await fetch('Spools.xlsx');if(!response.ok)throw e;const wb=XLSX.read(await response.arrayBuffer(),{type:'array',cellDates:true});catalog={rows:XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''})};$('ap-source').textContent='Base inicial da planilha';}
+   catch(e){if(navigator.onLine)throw e;const response=await fetch('Spools.xlsx');if(!response.ok)throw e;const wb=XLSX.read(await response.arrayBuffer(),{type:'array',cellDates:true});catalog={rows:XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''})};$('ap-source').textContent='Base inicial da planilha';}
+   return catalog;};
+   const [catalog,old]=await Promise.all([readCatalog(),RDO.list('rdo_apontamentos')]);
    if(!catalog.rows.length||catalog.rows.some(r=>!id(r))||new Set(catalog.rows.map(id)).size!==catalog.rows.length)throw Error('A base precisa conter IDs únicos dos spools.');
-   const old=await RDO.list('rdo_apontamentos');legacy=new Map(old.map(r=>[String(r.spool_id),r.conteudo]));rows=catalog.rows;loaded=true;
+   legacy=new Map(old.map(r=>[String(r.spool_id),r.conteudo]));rows=catalog.rows;loaded=true;
    options($('ap-service'),rows.map(r=>text(r['SERVIÇO'])));options($('ap-lot'),rows.map(lot));render();report('');
   }catch(e){report(e.message);}
  }

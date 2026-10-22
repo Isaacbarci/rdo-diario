@@ -1,0 +1,75 @@
+/* Layout adaptativo compartilhado. Mantem tabelas largas em sua propria rolagem. */
+html{ -webkit-text-size-adjust:100%;text-size-adjust:100% }
+body{min-width:0}img{max-width:100%}
+button,input,select,textarea{box-sizing:border-box;max-width:100%}
+button,a,input,select,textarea{touch-action:manipulation}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #9bd7ff;outline-offset:3px}
+main,.wrap,.panel,.sec,.cards,.history-filters,.user-card{min-width:0;box-sizing:border-box}
+h1{font-size:clamp(25px,4vw,34px);line-height:1.2;overflow-wrap:break-word}
+dialog{box-sizing:border-box;max-width:calc(100% - 24px);max-height:calc(100dvh - 24px);overflow:auto}
+.pages{flex-wrap:wrap;justify-content:center;gap:12px}.pages button{min-height:44px}
+.user-card h3,.user-card p{overflow-wrap:anywhere}.user-card button{min-height:44px}
+#users-create{grid-template-columns:repeat(2,minmax(0,1fr))}
+#users-create label,.users-search-row{min-width:0}
+#users-create input{min-height:46px}
+.page-historico #filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.page-historico #filters label{min-width:0}.page-historico #filters input,.page-historico #filters select{width:100%;min-width:0;min-height:46px}
+.page-historico #filters button{min-height:46px}
+.page-lixeira form input{min-width:0;flex:1 1 240px}
+/* Barra da conta: espaco reservado pelo observador de altura ja existente. */
+#palmont-header{font-size:14px!important;gap:16px!important;padding:10px 16px!important}
+#palmont-header #palmont-account a,#palmont-header #palmont-account button{min-height:44px;display:inline-flex!important;align-items:center}
+/* Filtros de Spool e Suporte: elimina larguras e recuos antigos conflitantes. */
+.romaneio-controls{width:100%!important;max-width:1200px!important;margin:20px auto!important;padding:0 16px;box-sizing:border-box}
+.romaneio-controls .linha-superior{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;justify-content:center!important;align-items:center!important;gap:10px!important;width:100%!important;max-width:100%!important;margin:0!important;padding:0!important}
+.romaneio-controls .linha-servico{display:flex!important;flex-direction:row!important;flex:1 1 340px!important;flex-wrap:wrap!important;gap:8px!important;width:auto!important;min-width:0!important;max-width:100%!important;padding:0!important;margin:0!important}
+.romaneio-controls #serviceList,.romaneio-controls #servicoSelect{flex:1 1 170px!important;min-width:0!important;width:auto!important;height:46px!important;margin:0!important;font-size:16px!important;padding:10px!important}
+.romaneio-controls .linha-servico button{flex:1 1 140px!important;min-width:0!important;width:auto!important;height:auto!important;min-height:46px!important;margin:0!important;font-size:15px!important;line-height:1.3!important;padding:10px 14px!important}
+.romaneio-controls .linha-filtro-responsiva{display:flex!important;flex:1 1 320px!important;flex-direction:row!important;gap:8px!important;width:auto!important;max-width:100%!important;min-width:0!important;margin:0!important;padding:0!important}
+.romaneio-controls #identificacaoFilter{flex:1 1 0!important;min-width:0!important;width:0!important;max-width:100%!important;height:46px!important;font-size:16px!important;margin:0!important;padding:10px 12px!important}
+.romaneio-controls #btnClearFilter{flex:0 0 46px!important;width:46px!important;min-width:46px!important;height:46px!important;margin:0!important}
+.romaneio-controls .linha-superior>button{flex:1 1 155px!important;min-width:0!important;width:auto!important;height:auto!important;min-height:46px!important;margin:0!important;padding:11px 14px!important;font-size:15px!important;line-height:1.3!important;white-space:normal!important}
+.romaneio-controls #contadorEditadas{flex:0 0 100%!important;width:100%!important;margin:4px 0!important;padding:4px;font-size:14px!important}
+.page-romaneio_spool .table-container,.page-romaneio_suporte .table-container{box-sizing:border-box;max-width:100%;overscroll-behavior-x:contain}
+@media(max-width:1100px){
+.romaneio-controls .linha-servico,.romaneio-controls .linha-filtro-responsiva{flex-basis:calc(50% - 10px)!important}
+#palmont-header{flex-wrap:wrap!important}#palmont-header #palmont-account{flex-wrap:wrap!important}
+}
+@media(max-width:760px){
+#palmont-header{font-size:14px!important;padding:10px 14px!important;gap:6px!important}
+#palmont-header #palmont-updates{font-size:13px!important;line-height:1.5}
+#palmont-header #palmont-account{font-size:14px!important;gap:4px 16px!important}
+#palmont-header #palmont-account .email{font-size:14px;line-height:1.5}
+.romaneio-controls{padding:0 12px;margin:16px auto!important}
+.romaneio-controls .linha-servico,.romaneio-controls .linha-filtro-responsiva{flex-basis:100%!important}
+.romaneio-controls .linha-superior>button{flex-basis:calc(50% - 5px)!important}
+.page-historico #filters{grid-template-columns:repeat(2,minmax(0,1fr))}
+main{padding:20px 16px!important}.user-card{padding:16px}
+.account{font-size:14px!important;gap:8px 14px!important}.account a,.account button{min-height:44px;display:inline-flex;align-items:center}.account span{min-width:0;overflow-wrap:anywhere}
+.tabs .tab{font-size:14px!important;min-height:46px}
+.page-rdo .hint,.page-rdo label{font-size:13px}.page-rdo .btn{font-size:14px}
+.history-filters{padding:16px!important}input:not([type=checkbox]):not([type=radio]),select,textarea{font-size:16px!important}
+.users-dialog{padding:20px!important}
+}
+@media(max-width:520px){
+main{margin:24px auto!important}.page-historico main,.page-lixeira main{margin-top:26px!important}
+#users-create,.cards,.history-filters,.page-historico #filters{grid-template-columns:minmax(0,1fr)!important}
+.user-card button{display:block;width:100%;margin:10px 0 0!important;white-space:normal}
+.users-search-row button{flex:1}.page-lixeira form>*{width:100%}
+.page-rdo .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));position:static}
+.page-rdo .tabs .tab{min-width:0;white-space:normal;padding:12px 8px}
+.page-rdo .sec{padding:16px}.page-rdo .grid2{grid-template-columns:minmax(0,1fr)}
+.page-rdo #dup>span{min-width:0;flex-basis:100%}.page-rdo #dup .btn{flex:1 1 140px;font-size:14px}
+.page-rdo .wrap>header{padding:0;min-height:0;gap:12px}.page-rdo .wrap>header .logo{position:static;margin:0}.page-rdo .eyebrow{font-size:10px}
+.page-login{padding:20px 14px!important}.page-login .card{padding:24px!important}
+/* Cada copia vira um cartao no celular; acoes continuam sendo os mesmos botoes. */
+.page-historico .table-wrap table{white-space:normal}.page-historico .table-wrap thead{display:none}
+.page-historico .table-wrap tbody{display:grid;gap:14px}
+.page-historico .table-wrap tr{display:grid;grid-template-columns:minmax(0,1fr);padding:16px;border:1px solid #2e4352;border-radius:14px;background:#14232f}
+.page-historico .table-wrap td{display:block;border:0;padding:7px 0;min-width:0;max-width:none;overflow-wrap:anywhere}
+.page-historico .table-wrap td::before{display:block;color:#bbcad6;font-size:12px;margin-bottom:4px}
+.page-historico .table-wrap td:nth-child(1)::before{content:'Gerado em'}.page-historico .table-wrap td:nth-child(2)::before{content:'Módulo'}.page-historico .table-wrap td:nth-child(3)::before{content:'Arquivo / serviço'}.page-historico .table-wrap td:nth-child(4)::before{content:'E-mail da conta'}.page-historico .table-wrap td:nth-child(5)::before{content:'Itens'}
+.page-historico .table-wrap td:last-child{display:flex;gap:10px;flex-wrap:wrap}.page-historico .table-wrap td:last-child button{flex:1;min-height:46px;margin:0!important}
+}
+
+@media(max-width:760px){button{min-height:44px}.modal-overlay>.modal{box-sizing:border-box;max-width:calc(100% - 24px);max-height:calc(100dvh - 32px);padding:20px}.modal-overlay .modal-footer{flex-wrap:wrap;gap:10px}.modal-overlay .modal-footer button{flex:1 1 120px;min-width:0!important;margin:0;font-size:16px!important}.modal-overlay .modal label{font-size:14px;line-height:1.5}.page-romaneio_materiais header:not(.modal header){flex-wrap:wrap}.page-romaneio_materiais .modal header{min-width:0}.page-rdo .tabs .tab:last-child:nth-child(odd){grid-column:1/-1}}

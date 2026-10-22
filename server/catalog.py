@@ -121,6 +121,18 @@ def materiais(row):
  return r
 
 TRANSFORM={'spool':spool,'suporte':suporte,'materiais':materiais}
+# Busca apenas os campos usados pelas mesmas regras das planilhas originais.
+SOURCE_FIELDS={
+ 'spool':['SERVIÇO','ISOMÉTRICO','SPOOL','ÁREA','REV','MATERIAL','PROG FAB','EXECUTANTE FAB','PESO','AREA_SUPERFICIE','LINHA','COND PINT','DIAMETRO','DATA ÚLTIMO ROM','COR_LINHA','ID_SPOOL','ROMANEIOS','STATUS','CORTE/BISEL'],
+ 'suporte':['SERVICO','Posição / TAG','Identificação','IDENTIFICACAO2','REV','Prog Fab','Desenho Suporte','INFORMACOES','Tipo de Suporte','Tipo Estrutura','Linha','Qtde','QTDE_ENVIADA','Peso (Kg)','AREA_SUPERFICIE','Número Romaneio','Data Romaneio','Localização','Status','Observação','ID_SISTEMA'],
+ 'materiais':[h for h in RULES['materiais']['headers'] if h not in ('DN','Tabela1.DN mm','PESO TOTAL')]
+}
+SOURCE_FILTERS={
+ 'spool':('SERVIÇO',['BOP','Cristalização','Evaporação','PLANTA DE E2G - GASA','WLP']),
+ 'suporte':('SERVICO',['BOP','Cristalização','Evaporação','Gaseificação','LOTES DE SUPORTES E DISPOSITIVOS','PLANTA DE E2G - GASA','PLANTA DE E2G - VALE DO ROSÁRIO','WLP']),
+ 'materiais':('DISCIPLINA',['Caldeiraria','Tubulação'])
+}
+
 def read_catalog(module,password=None):
  if module not in TABLES:raise ValueError('Modulo invalido')
  connection=connect(password)
@@ -128,7 +140,9 @@ def read_catalog(module,password=None):
   with connection.cursor() as cur:
    cur.execute('SET TRANSACTION READ ONLY')
    connection.begin()
-   cur.execute('SELECT * FROM `'+TABLES[module]+'`')
+   field,values=SOURCE_FILTERS[module]
+   sql='SELECT '+','.join('`'+h+'`' for h in SOURCE_FIELDS[module])+' FROM `'+TABLES[module]+'` WHERE `'+field+'` IN ('+','.join(['%s']*len(values))+')'
+   cur.execute(sql,tuple(values))
    float32_fields=[c[0] for c in cur.description if c[1]==FIELD_TYPE.FLOAT]
    rows=[];headers=RULES[module]['headers'];ids=set()
    for source in cur.fetchall():
