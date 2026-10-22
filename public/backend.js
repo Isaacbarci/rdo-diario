@@ -33,9 +33,36 @@
  async function remove(table,id){if(!validTables.has(table))throw Error('Tabela inválida.');await rest(table+'?id=eq.'+encodeURIComponent(id),{method:'DELETE'});change();}
  function localKey(name){return 'rdo.'+config.supabaseUrl+'.'+user().id+'.'+name;}
  function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
+ async function canDeleteOwner(id){return id===user().id?api.canDeleteOwnCopies():api.canDeleteCopies();}
+ async function finishDelete(job,key){
+  if(!await canDeleteOwner(job.userId))throw Error('Sua conta não tem permissão para excluir esta cópia.');
+  const headers={'x-rdo-admin':'true',Prefer:'return=representation'},path='rdo_arquivos?id=eq.'+encodeURIComponent(job.id)+'&user_id=eq.'+encodeURIComponent(job.userId);
+  const rows=await rest(path+'&select=*');
+  if(rows.length){if(rows.length!==1||rows[0].caminho!==job.path)throw Error('Cópia inválida.');const removed=await rest(path,{method:'DELETE',headers});if(removed?.length!==1)throw Error('Exclusão não autorizada.');}
+  try{await request('/storage/v1/object/rdo-arquivos',{method:'DELETE',headers,body:JSON.stringify({prefixes:[job.path]})},await token());localStorage.removeItem(key);}catch(e){throw Error('Registro removido; falta concluir a exclusão do arquivo. A tentativa será retomada ao abrir o Histórico.');}
+ }
+ async function retryDeletions(){
+  const prefix=localKey('delete-copy|');const keys=[];for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key?.startsWith(prefix))keys.push(key);}
+  for(const key of keys){let job;try{job=JSON.parse(localStorage.getItem(key));}catch{continue;}await finishDelete(job,key);}
+ }
  const api={
   ready:null,user,rest,list,save,remove,
   async isAdmin(){await api.ready;return (await request('/rest/v1/rpc/rdo_admin',{method:'POST',body:'{}'},await token()))===true;},
+  async canDeleteCopies(){await api.ready;return (await request('/rest/v1/rpc/rdo_excluir_copias',{method:'POST',body:'{}'},await token()))===true;},
+  async canDeleteOwnCopies(){await api.ready;return (await request('/rest/v1/rpc/rdo_excluir_proprias',{method:'POST',body:'{}'},await token()))===true;},
+  async manageUsers(payload=null,page=1,search=''){
+   await api.ready;if(!navigator.onLine)throw Error('Conecte à internet para gerenciar usuários.');
+   let response;try{response=await fetch('/api/usuarios?page='+encodeURIComponent(page)+'&search='+encodeURIComponent(search),{method:payload?'POST':'GET',cache:'no-store',signal:AbortSignal.timeout(45000),headers:{'Content-Type':'application/json',Authorization:'Bearer '+await token()},...(payload?{body:JSON.stringify(payload)}:{})});}catch(e){throw Error('Conexão indisponível. Confira a lista antes de repetir a operação.');}
+   const value=await response.json().catch(()=>null);if(!response.ok)throw Error(value?.message||'Gerenciamento indisponível. Confira a configuração do servidor.');return value;
+  },
+  async historyDelete(id){
+   await api.ready;if(!navigator.onLine)throw Error('Conecte à internet para excluir a cópia.');
+   if(!await api.canDeleteOwnCopies())throw Error('Sua conta não tem permissão para excluir cópias.');
+   const rows=await rest('rdo_arquivos?id=eq.'+encodeURIComponent(id)+'&select=*');if(rows.length!==1)throw Error('Cópia não encontrada.');
+   const row=rows[0];if(!await canDeleteOwner(row.user_id))throw Error('Sua conta não tem permissão para excluir esta cópia.');if(!['.xlsx','.html'].some(ext=>row.caminho===row.user_id+'/'+row.id+ext))throw Error('Caminho da cópia inválido.');
+   const job={id:row.id,userId:row.user_id,path:row.caminho},key=localKey('delete-copy|'+row.id);
+   localStorage.setItem(key,JSON.stringify(job));await finishDelete(job,key);
+  },
   async reportRecords({from='',to=''}={}){
    const admin=await api.isAdmin(),all=[];
    for(let offset=0;;offset+=500){
@@ -65,7 +92,7 @@
    await rest('rdo_arquivos',{method:'POST',body:JSON.stringify({id,user_id:owner,tipo:type,nome:name,caminho:path,tamanho:blob.size,sha256:hash,itens:items,equipe,turno,data_rdo:dataRdo})});
    download(blob,name);
   },
-  async history(){const all=[];for(let offset=0;;offset+=500){const part=await rest('rdo_arquivos?select=*&order=criado_em.desc,id&offset='+offset+'&limit=500');all.push(...part);if(part.length<500)return all;}},
+  async history(){await api.ready;if(navigator.onLine)await retryDeletions();const all=[];for(let offset=0;;offset+=500){const part=await rest('rdo_arquivos?select=*&order=criado_em.desc,id&offset='+offset+'&limit=500');all.push(...part);if(part.length<500)return all;}},
   async historyDownload(row){const response=await fetch(config.supabaseUrl+'/storage/v1/object/authenticated/rdo-arquivos/'+row.caminho,{cache:'no-store',headers:{apikey:config.supabaseKey,Authorization:'Bearer '+await token()}});if(!response.ok)throw Error('Não foi possível baixar a cópia.');const blob=await response.blob(),hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await blob.arrayBuffer())),b=>b.toString(16).padStart(2,'0')).join('');if(blob.size!==row.tamanho||hash!==row.sha256)throw Error('A integridade do arquivo não pôde ser confirmada.');download(blob,row.nome);},
   adapter(){
    const document=path=>({set:async value=>{const parts=path.split('/');if(parts[0]==='rdo'&&parts.length===2)return;if(parts[0]==='rdo'&&parts.length===4&&parts[1]===user().id)return save('rdo_registros',parts[3],value);if(parts[0]==='semanas')return save('rdo_semanas',parts[1],value);throw Error('Registro inválido.');},delete:async()=>{const parts=path.split('/');if(parts[0]==='semanas')return remove('rdo_semanas',parts[1]);if(parts[0]==='rdo'&&parts[1]===user().id)return remove('rdo_registros',parts[3]);throw Error('Registro inválido.');}});

@@ -8,6 +8,10 @@
     "api/catalogo.py": {
       "maxDuration": 60,
       "includeFiles": "server/**"
+    },
+    "api/usuarios.py": {
+      "maxDuration": 60,
+      "includeFiles": "server/user_admin.py"
     }
   },
   "headers": [
