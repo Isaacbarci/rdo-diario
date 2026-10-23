@@ -60,13 +60,18 @@ def dispatch(base,public_key,authorization,method,query,payload,transport=call):
  if action=='create':
   email=str(payload.get('email','')).strip().lower();password=payload.get('password')
   if len(email)>254 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+',email):raise AdminError(400,'Informe um e-mail válido.')
-  if not isinstance(password,str) or not 10<=len(password)<=128:raise AdminError(400,'Use uma senha entre 10 e 128 caracteres.')
+  if not isinstance(password,str) or not 8<=len(password)<=128:raise AdminError(400,'Use uma senha entre 8 e 128 caracteres.')
   row=transport(base,secret,'/auth/v1/admin/users','POST',{'email':email,'password':password,'email_confirm':True})
   return {'user':public_user(row),'message':'Conta criada. Já pode entrar com o e-mail e a senha definidos.'}
- if action not in ('permissions','delete','set_active'):raise AdminError(400,'Operação inválida.')
+ if action not in ('permissions','delete','set_active','reset_password'):raise AdminError(400,'Operação inválida.')
  target_id=validate_id(payload.get('id'))
  target=transport(base,secret,'/auth/v1/admin/users/'+target_id)
  if target_id==current.get('id') or str(target.get('email','')).lower()==ROOT_EMAIL:raise AdminError(403,'A conta administradora principal é protegida.')
+ if action=='reset_password':
+  password=payload.get('password')
+  if not isinstance(password,str) or not 8<=len(password)<=128:raise AdminError(400,'Use uma senha entre 8 e 128 caracteres.')
+  transport(base,secret,'/auth/v1/admin/users/'+target_id,'PUT',{'password':password})
+  return {'message':'Senha redefinida. A conta já pode entrar com a nova senha.'}
  if action=='set_active':
   active=payload.get('active')
   if type(active) is not bool:raise AdminError(400,'Estado da conta inválido.')

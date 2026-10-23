@@ -28,6 +28,19 @@
    try{const result=await RDO.manageUsers({action:'set_active',id:user.id,active:activate});dialog.close();await load();notice(result.message);}catch(e){error.textContent=e.message;}finally{confirm.disabled=false;cancel.disabled=false;dialog.oncancel=null;}
   });dialog.append(title,info,error,cancel,confirm);dialog.onclose=()=>dialog.remove();document.body.append(dialog);dialog.showModal();cancel.focus();
  }
+ function passwordDialog(user){
+  const dialog=document.createElement('dialog');dialog.className='users-dialog';
+  const form=document.createElement('form'),title=document.createElement('h2'),info=document.createElement('p');
+  title.textContent='Redefinir senha';info.textContent=user.email;
+  const label=document.createElement('label');label.textContent='Nova senha';
+  const input=document.createElement('input');input.type='password';input.autocomplete='new-password';input.minLength=8;input.maxLength=128;input.required=true;label.append(input);
+  const error=document.createElement('p');error.setAttribute('role','status');
+  const cancel=button('Cancelar',()=>dialog.close()),save=document.createElement('button');save.type='submit';save.textContent='Salvar nova senha';
+  form.onsubmit=async e=>{e.preventDefault();if(!form.reportValidity())return;save.disabled=true;cancel.disabled=true;dialog.oncancel=e=>e.preventDefault();
+   try{const result=await Palmont.manageUsers({action:'reset_password',id:user.id,password:input.value});input.value='';dialog.close();notice(result.message);}catch(e){error.textContent=e.message;}finally{save.disabled=false;cancel.disabled=false;dialog.oncancel=null;}
+  };
+  form.append(title,info,label,error,cancel,save);dialog.append(form);dialog.onclose=()=>{input.value='';dialog.remove();};document.body.append(dialog);dialog.showModal();input.focus();
+ }
  function render(user){
   const card=document.createElement('article');card.className='user-card';
   const name=document.createElement('h3');name.textContent=user.email||'Conta sem e-mail';card.append(name);
@@ -38,7 +51,7 @@
   own.input.onchange=()=>{if(!own.input.checked)remove.input.checked=false;};
   const result=document.createElement('p');result.setAttribute('role','status');
   const save=button('Salvar permissões',async()=>{save.disabled=true;try{const data=await RDO.manageUsers({action:'permissions',id:user.id,ver_historico:view.input.checked,excluir_copias:remove.input.checked,excluir_proprias:own.input.checked});result.textContent=data.message;}catch(e){result.textContent=e.message;}finally{save.disabled=false;}});
-  const del=button('Excluir conta',()=>deletionDialog(user));del.className='danger';del.disabled=!user.email;const toggle=button(user.desativada?'Reativar conta':'Desativar conta',()=>activationDialog(user));toggle.disabled=!user.email;card.append(view.wrapper,own.wrapper,remove.wrapper,save,toggle,del,result);return card;
+  const del=button('Excluir conta',()=>deletionDialog(user));del.className='danger';del.disabled=!user.email;const toggle=button(user.desativada?'Reativar conta':'Desativar conta',()=>activationDialog(user));toggle.disabled=!user.email;const reset=button('Redefinir senha',()=>passwordDialog(user));reset.disabled=!user.email;card.append(view.wrapper,own.wrapper,remove.wrapper,save,reset,toggle,del,result);return card;
  }
  async function load(){
   if(busy)return;busy=true;$('users-prev').disabled=true;$('users-next').disabled=true;$('users-reload').disabled=true;$('users-search-button').disabled=true;$('users-search-clear').disabled=true;$('users-search-input').disabled=true;notice('Carregando usuários…');
