@@ -38,7 +38,7 @@ def dispatch(base,public_key,authorization,method,query,payload,transport=call):
  if not authorization.startswith('Bearer ') or len(authorization)>8192:raise AdminError(401,'Entre com a conta administradora.')
  token=authorization[7:]
  current=transport(base,public_key,'/auth/v1/user',token=token)
- if str(current.get('email','')).lower()!=ROOT_EMAIL or not current.get('email_confirmed_at'):raise AdminError(403,'Somente a conta administradora principal pode acessar a lixeira.')
+ if not current.get('email_confirmed_at') or transport(base,public_key,'/rest/v1/rpc/rdo_admin','POST',{},token=token) is not True:raise AdminError(403,'Somente administradores totais podem acessar a lixeira.')
  if method=='POST':
   if payload.get('action')=='empty':
    if payload.get('confirm')!='ESVAZIAR':raise AdminError(400,'Digite ESVAZIAR para confirmar.')

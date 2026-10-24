@@ -46,16 +46,17 @@
   const name=document.createElement('h3');name.textContent=user.email||'Conta sem e-mail';card.append(name);
   if(user.principal){const badge=document.createElement('p');badge.textContent='Administradora principal · acesso total · conta protegida';card.append(badge);return card;}
   const status=document.createElement('p');status.textContent=user.desativada?'Conta desativada':user.email_confirmed_at?'Conta ativa · e-mail confirmado':'Conta ativa · e-mail ainda não confirmado';card.append(status);
+  const fullAdmin=checkbox('Administrador total',user.administrador_total);
   const view=checkbox('Ver histórico de todas as contas',user.ver_historico),own=checkbox('Excluir apenas as próprias cópias',user.excluir_proprias||user.excluir_copias),remove=checkbox('Excluir cópias de todas as contas',user.excluir_copias);
   view.input.onchange=()=>{if(!view.input.checked)remove.input.checked=false;};remove.input.onchange=()=>{if(remove.input.checked){view.input.checked=true;own.input.checked=true;}};
   own.input.onchange=()=>{if(!own.input.checked)remove.input.checked=false;};
   const result=document.createElement('p');result.setAttribute('role','status');
-  const save=button('Salvar permissões',async()=>{save.disabled=true;try{const data=await RDO.manageUsers({action:'permissions',id:user.id,ver_historico:view.input.checked,excluir_copias:remove.input.checked,excluir_proprias:own.input.checked});result.textContent=data.message;}catch(e){result.textContent=e.message;}finally{save.disabled=false;}});
-  const del=button('Excluir conta',()=>deletionDialog(user));del.className='danger';del.disabled=!user.email;const toggle=button(user.desativada?'Reativar conta':'Desativar conta',()=>activationDialog(user));toggle.disabled=!user.email;const reset=button('Redefinir senha',()=>passwordDialog(user));reset.disabled=!user.email;card.append(view.wrapper,own.wrapper,remove.wrapper,save,reset,toggle,del,result);return card;
+  const save=button('Salvar permissões',async()=>{save.disabled=true;try{const data=await RDO.manageUsers({action:'permissions',id:user.id,administrador_total:fullAdmin.input.checked,ver_historico:view.input.checked,excluir_copias:remove.input.checked,excluir_proprias:own.input.checked});result.textContent=data.message;}catch(e){result.textContent=e.message;}finally{save.disabled=false;}});
+  const del=button('Excluir conta',()=>deletionDialog(user));del.className='danger';del.disabled=!user.email;const toggle=button(user.desativada?'Reativar conta':'Desativar conta',()=>activationDialog(user));toggle.disabled=!user.email;const reset=button('Redefinir senha',()=>passwordDialog(user));reset.disabled=!user.email;card.append(fullAdmin.wrapper,view.wrapper,own.wrapper,remove.wrapper,save,reset,toggle,del,result);return card;
  }
  async function load(){
   if(busy)return;busy=true;$('users-prev').disabled=true;$('users-next').disabled=true;$('users-reload').disabled=true;$('users-search-button').disabled=true;$('users-search-clear').disabled=true;$('users-search-input').disabled=true;notice('Carregando usuários…');
-  try{const data=await RDO.manageUsers(null,page,searchTerm);$('users-list').replaceChildren(...data.users.map(render));$('users-page').textContent='Página '+page;$('users-prev').disabled=page===1;$('users-next').disabled=!data.has_more;notice(data.users.length?'As permissões valem somente para o histórico deste RDO.':'Nenhuma conta encontrada.');}
+  try{const data=await RDO.manageUsers(null,page,searchTerm);$('users-list').replaceChildren(...data.users.map(render));$('users-page').textContent='Página '+page;$('users-prev').disabled=page===1;$('users-next').disabled=!data.has_more;notice(data.users.length?'Permissões deste RDO.':'Nenhuma conta encontrada.');}
   catch(e){notice(e.message);}finally{busy=false;$('users-reload').disabled=false;$('users-search-button').disabled=false;$('users-search-clear').disabled=false;$('users-search-input').disabled=false;}
  }
  window.RDOUsers={async mount(){

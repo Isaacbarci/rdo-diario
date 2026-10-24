@@ -26,5 +26,5 @@ document.addEventListener('DOMContentLoaded',async()=>{
   dialog.append(title,text,input,cancel,confirm);document.body.append(dialog);dialog.showModal();cancel.focus();
  };
  $('search-form').onsubmit=e=>{e.preventDefault();if(!busy&&!emptying){page=1;load();}};$('clear').onclick=()=>{if(!busy&&!emptying){$('search').value='';page=1;load();}};$('prev').onclick=()=>{if(!busy&&!emptying){page=Math.max(1,page-1);load();}};$('next').onclick=()=>{if(!busy&&!emptying){page++;load();}};
- try{await api.ready;if(!await api.isAdmin())throw Error('Somente a conta administradora principal pode acessar a lixeira.');$('empty-trash').hidden=false;await load();}catch(e){$('message').textContent=e.message;}
+ try{await api.ready;if(!await api.isAdmin())throw Error('Somente administradores totais podem acessar a lixeira.');$('empty-trash').hidden=false;await load();}catch(e){$('message').textContent=e.message;}
 });

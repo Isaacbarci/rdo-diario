@@ -35,12 +35,12 @@ def public_user(row,permission=None):
  permission=permission or {}
  try:inactive=datetime.fromisoformat(str(row.get('banned_until','')).replace('Z','+00:00'))>datetime.now(timezone.utc)
  except (ValueError,TypeError):inactive=False
- return {k:row.get(k) for k in ('id','email','created_at','last_sign_in_at','email_confirmed_at')}|{'desativada':inactive,'principal':str(row.get('email','')).lower()==ROOT_EMAIL,'ver_historico':bool(permission.get('ver_historico')),'excluir_copias':bool(permission.get('excluir_copias')),'excluir_proprias':bool(permission.get('excluir_proprias') or permission.get('excluir_copias'))}
+ return {k:row.get(k) for k in ('id','email','created_at','last_sign_in_at','email_confirmed_at')}|{'desativada':inactive,'principal':str(row.get('email','')).lower()==ROOT_EMAIL,'administrador_total':bool(permission.get('administrador_total')),'ver_historico':bool(permission.get('ver_historico')),'excluir_copias':bool(permission.get('excluir_copias')),'excluir_proprias':bool(permission.get('excluir_proprias') or permission.get('excluir_copias'))}
 
 def dispatch(base,public_key,authorization,method,query,payload,transport=call):
  if not authorization.startswith('Bearer ') or len(authorization)>8192:raise AdminError(401,'Entre com a conta administradora.')
  current=transport(base,public_key,'/auth/v1/user',token=authorization[7:])
- if str(current.get('email','')).lower()!=ROOT_EMAIL or not current.get('email_confirmed_at'):raise AdminError(403,'Somente a conta administradora principal pode gerenciar usuários.')
+ if not current.get('email_confirmed_at') or transport(base,public_key,'/rest/v1/rpc/rdo_admin','POST',{},token=authorization[7:]) is not True:raise AdminError(403,'Somente administradores totais podem gerenciar usuários.')
  secret=os.environ.get('SUPABASE_SECRET_KEY','').strip()
  if not secret:raise AdminError(503,'Gerenciamento de usuários ainda não ativado. Configure SUPABASE_SECRET_KEY no servidor da Vercel.')
  if method=='GET':
@@ -52,7 +52,7 @@ def dispatch(base,public_key,authorization,method,query,payload,transport=call):
   if search:params['filter']=search
   data=transport(base,secret,'/auth/v1/admin/users?'+urlencode(params))
   users=data.get('users',[]);ids=','.join(validate_id(u['id']) for u in users)
-  permissions=transport(base,secret,'/rest/v1/rdo_acessos?select=user_id,ver_historico,excluir_copias,excluir_proprias&user_id=in.('+ids+')') if ids else []
+  permissions=transport(base,secret,'/rest/v1/rdo_acessos?select=user_id,administrador_total,ver_historico,excluir_copias,excluir_proprias&user_id=in.('+ids+')') if ids else []
   by_id={p['user_id']:p for p in permissions}
   return {'users':[public_user(u,by_id.get(u['id'])) for u in users],'page':page,'has_more':len(users)==50}
  if method!='POST':raise AdminError(405,'Método não permitido.')
@@ -81,7 +81,11 @@ def dispatch(base,public_key,authorization,method,query,payload,transport=call):
   view=payload.get('ver_historico');delete=payload.get('excluir_copias');own=payload.get('excluir_proprias',False)
   if type(view) is not bool or type(delete) is not bool or type(own) is not bool:raise AdminError(400,'Permissões inválidas.')
   if delete and not view:raise AdminError(400,'Para excluir cópias, permita também ver o histórico de todos.')
-  row={'user_id':target_id,'ver_historico':view,'excluir_copias':delete,'excluir_proprias':own or delete}
+  full_admin=payload.get('administrador_total')
+  if 'administrador_total' not in payload:
+   previous=transport(base,secret,'/rest/v1/rdo_acessos?select=administrador_total&user_id=eq.'+target_id);full_admin=bool(previous and previous[0].get('administrador_total'))
+  if type(full_admin) is not bool:raise AdminError(400,'Permissão de administrador inválida.')
+  row={'user_id':target_id,'administrador_total':full_admin,'ver_historico':view,'excluir_copias':delete,'excluir_proprias':own or delete}
   transport(base,secret,'/rest/v1/rdo_acessos?on_conflict=user_id','POST',row,headers={'Prefer':'resolution=merge-duplicates,return=minimal'})
   return {'message':'Permissões atualizadas.'}
  if payload.get('confirm_email','').strip().lower()!=str(target.get('email','')).lower():raise AdminError(400,'Digite o e-mail da conta para confirmar a exclusão.')
